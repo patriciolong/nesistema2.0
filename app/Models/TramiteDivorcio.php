@@ -22,7 +22,7 @@ class TramiteDivorcio extends Model
         'td_estado_contac_ecuador', 'td_tel_ecuador', 'td_observaciones', 'td_mpago',
         'td_valor', 'td_abono', 'td_saldo', 'id_usuario', 'td_oficina', 'td_fecha',
         'td_motivo_divorcio', 'td_con_quien_vive', 'td_firmar_en',
-        'estado', 'fecha_completado', 'notificado_at'
+        'estado', 'documento_pdf', 'fecha_completado', 'notificado_at'
     ];
 
     public function cliente()

@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ClientesExport;
+use App\Exports\ClientesTemplateExport;
+use App\Imports\ClientesImport;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ClienteController extends Controller
@@ -61,6 +63,10 @@ class ClienteController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        if (!$user->hasPermission('clientes.view')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso para consultar el listado de clientes.');
+        }
+
         $query = $this->buildQuery($request);
 
         $statsQuery = clone $query;
@@ -86,7 +92,69 @@ class ClienteController extends Controller
      */
     public function export(Request $request)
     {
+        if (!Auth::user()->hasPermission('clientes.export')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso para exportar el catálogo de clientes.');
+        }
+
         return Excel::download(new ClientesExport($this->buildQuery($request)), 'clientes.xlsx');
+    }
+
+    /**
+     * Import clients from an Excel or CSV file.
+     */
+    public function import(Request $request)
+    {
+        if (!Auth::user()->hasPermission('clientes.create')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso para importar clientes.');
+        }
+
+        $request->validate([
+            'archivo_excel' => ['required', 'file', 'mimes:xlsx,xls,csv,txt', 'max:20480'],
+            'duplicados' => ['nullable', 'in:actualizar,omitir'],
+            'oficina_registro' => ['nullable', 'string', 'max:100'],
+        ], [
+            'archivo_excel.required' => 'Debes seleccionar un archivo de Excel (.xlsx, .xls o .csv) para importar.',
+            'archivo_excel.mimes' => 'El formato del archivo debe ser .xlsx, .xls o .csv.',
+            'archivo_excel.max' => 'El archivo no debe exceder los 20 MB.',
+        ]);
+
+        $duplicados = $request->input('duplicados', 'actualizar');
+        $user = Auth::user();
+        $oficinaDefault = $request->filled('oficina_registro') ? $request->input('oficina_registro') : ($user->office ?? 'General');
+
+        try {
+            $import = new ClientesImport($duplicados, $oficinaDefault, $user->name ?? 'Sistema');
+            Excel::import($import, $request->file('archivo_excel'));
+
+            $mensaje = "¡Importación completada con éxito! Se procesaron {$import->totalRows} filas: {$import->createdCount} clientes nuevos creados, {$import->updatedCount} clientes existentes actualizados.";
+            
+            if ($import->skippedCount > 0) {
+                $mensaje .= " ({$import->skippedCount} filas omitidas).";
+            }
+
+            return redirect()->route('clientes.index')->with('success', $mensaje);
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+            $errorMsg = 'Error de validación en Excel: ';
+            foreach ($failures as $failure) {
+                $errorMsg .= "Fila {$failure->row()}: " . implode(', ', $failure->errors()) . ' ';
+            }
+            return redirect()->route('clientes.index')->with('error', $errorMsg);
+        } catch (\Exception $e) {
+            return redirect()->route('clientes.index')->with('error', 'Ocurrió un error al procesar el archivo: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Download a sample Excel template for client imports.
+     */
+    public function downloadTemplate()
+    {
+        if (!Auth::user()->hasPermission('clientes.create') && !Auth::user()->hasPermission('clientes.view')) {
+            abort(403, 'Acceso denegado: No tienes autorización para descargar la plantilla.');
+        }
+
+        return Excel::download(new ClientesTemplateExport(), 'plantilla_importacion_clientes.xlsx');
     }
 
     /**
@@ -94,6 +162,10 @@ class ClienteController extends Controller
      */
     public function create()
     {
+        if (!Auth::user()->hasPermission('clientes.create')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso para registrar nuevos clientes.');
+        }
+
         return view('clientes.create');
     }
 
@@ -102,6 +174,10 @@ class ClienteController extends Controller
      */
     public function store(Request $request)
     {
+        if (!Auth::user()->hasPermission('clientes.create')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso para registrar nuevos clientes.');
+        }
+
         // Validation and creation
         $validated = $request->validate([
             'c_identificacion' => 'required|string|max:50',
@@ -142,6 +218,10 @@ class ClienteController extends Controller
      */
     public function edit(Cliente $cliente)
     {
+        if (!Auth::user()->hasPermission('clientes.edit')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso para editar la información de clientes.');
+        }
+
         return view('clientes.edit', compact('cliente'));
     }
 
@@ -150,6 +230,10 @@ class ClienteController extends Controller
      */
     public function update(Request $request, Cliente $cliente)
     {
+        if (!Auth::user()->hasPermission('clientes.edit')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso para editar la información de clientes.');
+        }
+
         // Validation and update
         $validated = $request->validate([
             'c_identificacion' => 'required|string|max:50',
@@ -176,7 +260,14 @@ class ClienteController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        if (!Auth::user()->hasPermission('clientes.delete')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso para eliminar clientes.');
+        }
+
+        $cliente = Cliente::findOrFail($id);
+        $cliente->delete();
+
+        return redirect()->route('clientes.index')->with('success', 'Cliente eliminado exitosamente.');
     }
 
     /**
@@ -184,6 +275,10 @@ class ClienteController extends Controller
      */
     public function abonar(Request $request, Cliente $cliente)
     {
+        if (!Auth::user()->hasPermission('clientes.abonar')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso para registrar abonos o pagos.');
+        }
+
         $request->validate([
             'nuevo_abono' => 'required|numeric|min:0.01',
             'metodo_pago' => 'required|in:Efectivo,Cheque,Transferencia,Tarjeta,Zelle',

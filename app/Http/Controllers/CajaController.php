@@ -27,6 +27,10 @@ class CajaController extends Controller
     public function index()
     {
         $user = Auth::user();
+        if (!$user->hasPermission('cajas.view') && !$user->hasPermission('cajas.operar') && !$user->hasPermission('cajas.historial')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso para acceder al módulo de caja.');
+        }
+
         $cajaActual = $this->cajaService->getCajaAbierta($user);
 
         if (!$cajaActual) {
@@ -54,6 +58,10 @@ class CajaController extends Controller
      */
     public function abrir(Request $request)
     {
+        if (!Auth::user()->hasPermission('cajas.create') && !Auth::user()->hasPermission('cajas.operar')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso para aperturar cajas.');
+        }
+
         $request->validate([
             'monto_apertura' => 'required|numeric|min:0',
             'observaciones' => 'nullable|string|max:500',
@@ -74,6 +82,10 @@ class CajaController extends Controller
      */
     public function registrarMovimientoManual(Request $request)
     {
+        if (!Auth::user()->hasPermission('cajas.create') && !Auth::user()->hasPermission('cajas.operar')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso para registrar movimientos de caja.');
+        }
+
         $request->validate([
             'tipo' => 'required|in:ingreso_extra,egreso_gasto,egreso_retiro',
             'monto' => 'required|numeric|min:0.01',

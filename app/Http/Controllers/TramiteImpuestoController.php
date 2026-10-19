@@ -24,6 +24,10 @@ class TramiteImpuestoController extends Controller
 
     public function create(Cliente $cliente)
     {
+        if (!Auth::user()->hasPermission('impuestos.create')) {
+            abort(403, 'Acceso restringido: No tienes permiso para crear trámites de impuestos.');
+        }
+
         $bancos = Banco::activos()->orderBy('nombre')->get();
         $tarjetas = Tarjeta::with('banco')->activas()->orderBy('nombre')->get();
         $cajaAbierta = $this->cajaService->getCajaAbierta(Auth::user());
@@ -33,6 +37,9 @@ class TramiteImpuestoController extends Controller
 
     public function store(Request $request, Cliente $cliente)
     {
+        if (!Auth::user()->hasPermission('impuestos.create')) {
+            abort(403, 'Acceso restringido: No tienes permiso para crear trámites de impuestos.');
+        }
         $validated = $request->validate([
             'ofifirmar' => ['required', 'string'],
             'fechaim' => ['nullable', 'date'],

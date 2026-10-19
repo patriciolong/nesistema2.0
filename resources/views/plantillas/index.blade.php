@@ -16,14 +16,22 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <a href="{{ route('plantillas-membretes.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold shadow-sm transition-all">
-                    <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path></svg>
-                    Encabezados y Pies de Página
+                <a href="{{ route('plantillas.expediente') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold shadow-sm transition-all">
+                    <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                    Expediente de Documentos
                 </a>
-                <a href="{{ route('plantillas.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg shadow-indigo-200 transition-all">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                    + Crear Nueva Plantilla
-                </a>
+                @if(auth()->user()->hasPermission('membretes.view'))
+                    <a href="{{ route('plantillas-membretes.index') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold shadow-sm transition-all">
+                        <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path></svg>
+                        Encabezados y Pies
+                    </a>
+                @endif
+                @if(auth()->user()->hasPermission('plantillas.create'))
+                    <a href="{{ route('plantillas.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg shadow-indigo-200 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                        + Crear Nueva Plantilla
+                    </a>
+                @endif
             </div>
         </div>
     </x-slot>
@@ -114,32 +122,42 @@
 
                         <!-- Footer de Acciones -->
                         <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2">
-                            <button type="button" @click="openModal({{ $p->id_plantilla }}, '{{ addslashes($p->nombre_plantilla) }}')" 
-                                    class="inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow transition-all">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                Usar con Cliente
-                            </button>
+                            @if(auth()->user()->hasPermission('plantillas.generar') || auth()->user()->hasPermission('plantillas.view'))
+                                <button type="button" @click="openModal({{ $p->id_plantilla }}, '{{ addslashes($p->nombre_plantilla) }}')" 
+                                        class="inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow transition-all">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                    Usar con Cliente
+                                </button>
+                            @else
+                                <div></div>
+                            @endif
 
                             <div class="flex items-center gap-1">
                                 <!-- Duplicar Plantilla -->
-                                <form action="{{ route('plantillas.duplicar', $p->id_plantilla) }}" method="POST" class="inline-block">
-                                    @csrf
-                                    <button type="submit" class="p-2 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Duplicar plantilla en 1 clic">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                    </button>
-                                </form>
+                                @if(auth()->user()->hasPermission('plantillas.create'))
+                                    <form action="{{ route('plantillas.duplicar', $p->id_plantilla) }}" method="POST" class="inline-block">
+                                        @csrf
+                                        <button type="submit" class="p-2 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Duplicar plantilla en 1 clic">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                        </button>
+                                    </form>
+                                @endif
 
-                                <a href="{{ route('plantillas.edit', $p->id_plantilla) }}" class="p-2 text-slate-600 hover:text-indigo-600 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-all" title="Editar plantilla">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                </a>
+                                @if(auth()->user()->hasPermission('plantillas.edit'))
+                                    <a href="{{ route('plantillas.edit', $p->id_plantilla) }}" class="p-2 text-slate-600 hover:text-indigo-600 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-all" title="Editar plantilla">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    </a>
+                                @endif
 
-                                <form action="{{ route('plantillas.destroy', $p->id_plantilla) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas eliminar esta plantilla?')" class="inline-block">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors" title="Eliminar plantilla">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    </button>
-                                </form>
+                                @if(auth()->user()->hasPermission('plantillas.delete'))
+                                    <form action="{{ route('plantillas.destroy', $p->id_plantilla) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas eliminar esta plantilla?')" class="inline-block">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors" title="Eliminar plantilla">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </div>
 
@@ -151,9 +169,11 @@
                         </div>
                         <h3 class="text-base font-bold text-slate-800">No se encontraron plantillas</h3>
                         <p class="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-5">Diseña tus formatos notariales con variables o sube un documento PDF para convertirlo.</p>
-                        <a href="{{ route('plantillas.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-md hover:bg-indigo-700 transition-all">
-                            + Crear Primera Plantilla
-                        </a>
+                        @if(auth()->user()->hasPermission('plantillas.create'))
+                            <a href="{{ route('plantillas.create') }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-md hover:bg-indigo-700 transition-all">
+                                + Crear Primera Plantilla
+                            </a>
+                        @endif
                     </div>
                 @endforelse
             </div>

@@ -24,6 +24,10 @@ class TramiteVarioController extends Controller
 
     public function create(Request $request)
     {
+        if (!Auth::user()->hasPermission('tramites_varios.create')) {
+            abort(403, 'Acceso restringido: No tienes permiso para crear trámites varios.');
+        }
+
         $clienteId = $request->query('cliente');
         if (!$clienteId) abort(404, 'Cliente no especificado');
 
@@ -37,6 +41,9 @@ class TramiteVarioController extends Controller
 
     public function store(Request $request)
     {
+        if (!Auth::user()->hasPermission('tramites_varios.create')) {
+            abort(403, 'Acceso restringido: No tienes permiso para crear trámites varios.');
+        }
         $validated = $request->validate([
             'id_cliente' => ['required', 'exists:cliente,id_cliente'],
             'tv_motivo' => ['required', 'string', 'max:50'],

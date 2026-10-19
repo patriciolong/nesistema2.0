@@ -13,6 +13,13 @@ class PlantillaMembreteController extends Controller
      */
     public function index(Request $request)
     {
+        if (!auth()->user()->hasPermission('membretes.view')) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Sin autorización para ver membretes.'], 403);
+            }
+            abort(403, 'Acceso restringido: No tienes autorización para ver los membretes y encabezados.');
+        }
+
         $encabezados = PlantillaMembrete::encabezados()->orderBy('es_predeterminado', 'desc')->orderBy('nombre', 'asc')->get();
         $pies = PlantillaMembrete::pies()->orderBy('es_predeterminado', 'desc')->orderBy('nombre', 'asc')->get();
 
@@ -32,6 +39,13 @@ class PlantillaMembreteController extends Controller
      */
     public function store(Request $request)
     {
+        if (!auth()->user()->hasPermission('membretes.create')) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Sin autorización para crear membretes.'], 403);
+            }
+            abort(403, 'Acceso restringido: No tienes autorización para crear membretes.');
+        }
+
         $validated = $request->validate([
             'nombre' => 'required|string|max:150',
             'tipo' => 'required|in:encabezado,pie',
@@ -64,6 +78,10 @@ class PlantillaMembreteController extends Controller
      */
     public function show(PlantillaMembrete $membrete)
     {
+        if (!auth()->user()->hasPermission('membretes.view')) {
+            return response()->json(['success' => false, 'message' => 'Sin autorización.'], 403);
+        }
+
         return response()->json([
             'success' => true,
             'membrete' => $membrete,
@@ -75,6 +93,13 @@ class PlantillaMembreteController extends Controller
      */
     public function update(Request $request, PlantillaMembrete $membrete)
     {
+        if (!auth()->user()->hasPermission('membretes.edit')) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Sin autorización para editar membretes.'], 403);
+            }
+            abort(403, 'Acceso restringido: No tienes autorización para editar membretes.');
+        }
+
         $validated = $request->validate([
             'nombre' => 'required|string|max:150',
             'contenido_html' => 'required|string',
@@ -103,6 +128,10 @@ class PlantillaMembreteController extends Controller
      */
     public function destroy(PlantillaMembrete $membrete)
     {
+        if (!auth()->user()->hasPermission('membretes.delete')) {
+            return response()->json(['success' => false, 'message' => 'Sin autorización para eliminar membretes.'], 403);
+        }
+
         if ($membrete->tipo === 'encabezado') {
             \App\Models\Plantilla::where('encabezado_id', $membrete->id)->update(['encabezado_id' => null]);
         } else {
@@ -122,6 +151,10 @@ class PlantillaMembreteController extends Controller
      */
     public function uploadImage(Request $request)
     {
+        if (!auth()->user()->hasPermission('membretes.create') && !auth()->user()->hasPermission('membretes.edit')) {
+            return response()->json(['error' => 'No tienes autorización para subir imágenes.'], 403);
+        }
+
         $destinationPath = public_path('uploads/membretes');
         if (!File::exists($destinationPath)) {
             File::makeDirectory($destinationPath, 0755, true);

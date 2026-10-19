@@ -14,8 +14,8 @@ class TipoTramiteController extends Controller
      */
     public function index(Request $request)
     {
-        if (!auth()->user()->hasPermission('tipo_tramites.manage')) {
-            abort(403, 'Acceso denegado: No cuentas con el permiso necesario para administrar tipos de trámites.');
+        if (!auth()->user()->hasPermission('tipo_tramites.view')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso necesario para ver tipos de trámites.');
         }
 
         $query = TipoTramite::query();
@@ -51,7 +51,7 @@ class TipoTramiteController extends Controller
      */
     public function create()
     {
-        if (!auth()->user()->hasPermission('tipo_tramites.manage')) abort(403);
+        if (!auth()->user()->hasPermission('tipo_tramites.create')) abort(403, 'Acceso denegado.');
 
         return view('tipo_tramites.create');
     }
@@ -61,6 +61,8 @@ class TipoTramiteController extends Controller
      */
     public function store(Request $request)
     {
+        if (!auth()->user()->hasPermission('tipo_tramites.create')) abort(403, 'Acceso denegado.');
+
         $validated = $request->validate([
             'nombre' => 'required|string|max:100',
             'descripcion' => 'nullable|string|max:255',
@@ -103,6 +105,8 @@ class TipoTramiteController extends Controller
      */
     public function edit(TipoTramite $tipoTramite)
     {
+        if (!auth()->user()->hasPermission('tipo_tramites.edit')) abort(403, 'Acceso denegado.');
+
         return view('tipo_tramites.edit', compact('tipoTramite'));
     }
 
@@ -111,6 +115,8 @@ class TipoTramiteController extends Controller
      */
     public function update(Request $request, TipoTramite $tipoTramite)
     {
+        if (!auth()->user()->hasPermission('tipo_tramites.edit')) abort(403, 'Acceso denegado.');
+
         $validated = $request->validate([
             'nombre' => 'required|string|max:100',
             'descripcion' => 'nullable|string|max:255',
@@ -142,6 +148,8 @@ class TipoTramiteController extends Controller
      */
     public function destroy(TipoTramite $tipoTramite)
     {
+        if (!auth()->user()->hasPermission('tipo_tramites.delete')) abort(403, 'Acceso denegado.');
+
         $tipoTramite->delete();
         return redirect()->route('tipo-tramites.index')->with('success', 'Tipo de trámite eliminado correctamente.');
     }

@@ -176,24 +176,38 @@
                             @endif
 
                             <!-- Exportar a Excel -->
-                            <a href="{{ route('clientes.export', request()->all()) }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-sm font-semibold rounded-xl transition-all">
-                                <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
-                                    <path d="M8.5 12h2v4h-2zm3.5-1h2v6h-2zm3.5 2h2v3h-2z"/>
-                                </svg>
-                                Exportar Excel
-                            </a>
+                            @if(auth()->user()->hasPermission('clientes.export'))
+                                <a href="{{ route('clientes.export', request()->all()) }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-sm font-semibold rounded-xl transition-all shadow-xs">
+                                    <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/>
+                                        <path d="M8.5 12h2v4h-2zm3.5-1h2v6h-2zm3.5 2h2v3h-2z"/>
+                                    </svg>
+                                    <span>Exportar Excel</span>
+                                </a>
+                            @endif
+
+                            <!-- Importar desde Excel -->
+                            @if(auth()->user()->hasPermission('clientes.create'))
+                                <button type="button" onclick="openImportModal()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-sm font-semibold rounded-xl transition-all shadow-xs cursor-pointer active:scale-95">
+                                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                    </svg>
+                                    <span>📥 Importar Excel</span>
+                                </button>
+                            @endif
                         </form>
 
                         <!-- Botón Crear Nuevo Cliente -->
-                        <div class="flex shrink-0">
-                            <a href="{{ route('clientes.create') }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
-                                <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
-                                </svg>
-                                Nuevo Cliente
-                            </a>
-                        </div>
+                        @if(auth()->user()->hasPermission('clientes.create'))
+                            <div class="flex shrink-0">
+                                <a href="{{ route('clientes.create') }}" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                                    <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    Nuevo Cliente
+                                </a>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Estilos para hover garantizado -->
@@ -589,11 +603,214 @@
             document.getElementById('modalAbonar').classList.add('hidden');
         }
 
+        // --- Funciones para Modal de Importación Excel ---
+        function openImportModal() {
+            document.getElementById('modalImportar').classList.remove('hidden');
+            clearSelectedFile();
+        }
+
+        function closeImportModal() {
+            document.getElementById('modalImportar').classList.add('hidden');
+        }
+
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                showFileDetails(file);
+            }
+        }
+
+        function showFileDetails(file) {
+            document.getElementById('uploadPlaceholder').classList.add('hidden');
+            const infoBox = document.getElementById('fileSelectedInfo');
+            infoBox.classList.remove('hidden');
+            document.getElementById('fileNameDisplay').textContent = file.name;
+            document.getElementById('fileSizeDisplay').textContent = (file.size / 1024).toFixed(1) + ' KB - Listo para importar';
+        }
+
+        function clearSelectedFile() {
+            const fileInput = document.getElementById('archivo_excel');
+            if (fileInput) fileInput.value = '';
+            document.getElementById('uploadPlaceholder').classList.remove('hidden');
+            document.getElementById('fileSelectedInfo').classList.add('hidden');
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            document.getElementById('dropZone').classList.add('border-indigo-500', 'bg-indigo-50/50');
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            document.getElementById('dropZone').classList.remove('border-indigo-500', 'bg-indigo-50/50');
+        }
+
+        function handleFileDrop(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            document.getElementById('dropZone').classList.remove('border-indigo-500', 'bg-indigo-50/50');
+
+            if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+                const file = event.dataTransfer.files[0];
+                const fileInput = document.getElementById('archivo_excel');
+                fileInput.files = event.dataTransfer.files;
+                showFileDetails(file);
+            }
+        }
+
+        function handleImportSubmit(event) {
+            const btn = document.getElementById('btnSubmitImport');
+            const btnText = document.getElementById('btnSubmitImportText');
+            btn.disabled = true;
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            btnText.textContent = 'Procesando archivo...';
+        }
+
         // Cerrar con Escape
         document.addEventListener('keydown', function(event) {
             if (event.key === "Escape") {
                 closeAbonarModal();
+                closeImportModal();
             }
         });
     </script>
+
+    <!-- Modal para Importación Masiva de Clientes por Excel -->
+    <div id="modalImportar" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-import-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Backdrop -->
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" onclick="closeImportModal()"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-slate-200">
+                
+                <form action="{{ route('clientes.import') }}" method="POST" enctype="multipart/form-data" id="formImportClientes" onsubmit="handleImportSubmit(event)">
+                    @csrf
+                    
+                    <!-- Header Modal -->
+                    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-6 text-white flex items-center justify-between border-b border-slate-700">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-600/40 border border-indigo-400/30 flex items-center justify-center text-2xl shadow-inner shrink-0">
+                                📥
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-black text-white tracking-tight" id="modal-import-title">
+                                    Importar Clientes desde Excel
+                                </h3>
+                                <p class="text-xs text-slate-300 mt-0.5">
+                                    Carga masiva de clientes en formato .xlsx, .xls o .csv
+                                </p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="closeImportModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer">
+                            ✕
+                        </button>
+                    </div>
+
+                    <div class="p-6 space-y-5">
+                        <!-- Banner de Plantilla Modelo Descargable -->
+                        <div class="bg-indigo-50/70 border border-indigo-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div class="flex items-center gap-2.5">
+                                <span class="text-2xl">📋</span>
+                                <div>
+                                    <h4 class="text-xs font-black text-indigo-900">¿No tienes el formato exacto?</h4>
+                                    <p class="text-[11px] text-indigo-700 mt-0.5">Descarga la plantilla con encabezados estándar y datos de ejemplo.</p>
+                                </div>
+                            </div>
+                            <a href="{{ route('clientes.template') }}" class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                <span>Descargar Plantilla</span>
+                            </a>
+                        </div>
+
+                        <!-- Zona de Subida Drag & Drop -->
+                        <div>
+                            <label class="block text-xs font-black uppercase tracking-wider text-slate-700 mb-2">
+                                Selecciona el Archivo Excel o CSV *
+                            </label>
+                            <div id="dropZone" 
+                                 onclick="document.getElementById('archivo_excel').click()"
+                                 ondragover="handleDragOver(event)" 
+                                 ondragleave="handleDragLeave(event)" 
+                                 ondrop="handleFileDrop(event)"
+                                 class="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-2xl p-6 text-center bg-slate-50/70 hover:bg-indigo-50/30 transition-all cursor-pointer group">
+                                <input type="file" name="archivo_excel" id="archivo_excel" accept=".xlsx, .xls, .csv, text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" class="hidden" required onchange="handleFileSelect(this)">
+                                
+                                <div id="uploadPlaceholder" class="space-y-2 pointer-events-none">
+                                    <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto text-2xl group-hover:scale-110 transition-transform">
+                                        📊
+                                    </div>
+                                    <p class="text-xs font-bold text-slate-700">
+                                        Arrastra tu archivo aquí o <span class="text-indigo-600 underline">haz clic para examinar</span>
+                                    </p>
+                                    <p class="text-[11px] text-slate-400">
+                                        Formatos compatibles: .xlsx, .xls, .csv (Máx. 20 MB)
+                                    </p>
+                                </div>
+
+                                <div id="fileSelectedInfo" class="hidden flex items-center justify-center gap-3 text-left bg-white p-3 rounded-xl border border-indigo-200">
+                                    <span class="text-2xl">📗</span>
+                                    <div class="min-w-0 flex-1">
+                                        <p id="fileNameDisplay" class="text-xs font-black text-slate-800 truncate"></p>
+                                        <p id="fileSizeDisplay" class="text-[10px] font-semibold text-slate-400"></p>
+                                    </div>
+                                    <button type="button" onclick="event.stopPropagation(); clearSelectedFile();" class="text-rose-500 hover:text-rose-700 text-xs font-black px-2 py-1 rounded cursor-pointer">
+                                        Cambiar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Opciones de Configuración -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                                    Si la cédula ya existe:
+                                </label>
+                                <select name="duplicados" class="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 font-bold text-slate-700 focus:bg-white focus:border-indigo-500">
+                                    <option value="actualizar" selected>🔄 Actualizar datos existentes</option>
+                                    <option value="omitir">⏭️ Omitir duplicados</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+                                    Oficina por defecto:
+                                </label>
+                                <select name="oficina_registro" class="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 font-bold text-slate-700 focus:bg-white focus:border-indigo-500">
+                                    <option value="{{ $user->office ?? 'General' }}">{{ $user->office ?? 'Oficina Actual' }} (Predeterminada)</option>
+                                    @foreach($oficinas as $ofi)
+                                        @if($ofi && $ofi !== ($user->office ?? 'General'))
+                                            <option value="{{ $ofi }}">{{ $ofi }}</option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Resumen Informativo -->
+                        <div class="text-[11px] text-slate-500 bg-slate-100 p-3 rounded-xl border border-slate-200 space-y-1">
+                            <p class="font-bold text-slate-700">💡 Columnas reconocidas automáticamente:</p>
+                            <p><code class="text-indigo-600 font-mono">identificacion / cedula</code>, <code class="text-indigo-600 font-mono">nombres</code>, <code class="text-indigo-600 font-mono">apellidos</code>, <code class="text-indigo-600 font-mono">telefono</code>, <code class="text-indigo-600 font-mono">email</code>, <code class="text-indigo-600 font-mono">direccion</code>, <code class="text-indigo-600 font-mono">ciudad</code>, <code class="text-indigo-600 font-mono">pais</code>, <code class="text-indigo-600 font-mono">deuda</code>, <code class="text-indigo-600 font-mono">abono</code>.</p>
+                        </div>
+                    </div>
+
+                    <!-- Footer Modal -->
+                    <div class="bg-slate-50 px-6 py-4 flex flex-col-reverse sm:flex-row justify-end gap-2.5 border-t border-slate-100">
+                        <button type="button" onclick="closeImportModal()" class="w-full sm:w-auto px-5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition-all cursor-pointer">
+                            Cancelar
+                        </button>
+                        <button type="submit" id="btnSubmitImport" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-xl text-xs font-black shadow-lg shadow-indigo-200 transition-all cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                            <span id="btnSubmitImportText">Iniciar Importación</span>
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
 </x-app-layout>

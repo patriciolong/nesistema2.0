@@ -9,7 +9,6 @@
   },
   "server": {
     "androidScheme": "https",
-    "cleartext": true,
-    "allowNavigation": ["*"]
+    "cleartext": true
   }
 }

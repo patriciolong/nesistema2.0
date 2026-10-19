@@ -10,8 +10,8 @@ class TarjetaController extends Controller
 {
     public function index(Request $request)
     {
-        if (!auth()->user()->hasPermission('tarjetas.manage')) {
-            abort(403, 'Acceso denegado: No cuentas con el permiso necesario para gestionar tarjetas o terminales POS.');
+        if (!auth()->user()->hasPermission('tarjetas.view')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso necesario para ver tarjetas o datáfonos.');
         }
 
         $query = Tarjeta::with('banco');
@@ -51,7 +51,9 @@ class TarjetaController extends Controller
 
     public function create()
     {
-        if (!auth()->user()->hasPermission('tarjetas.manage')) abort(403);
+        if (!auth()->user()->hasPermission('tarjetas.create')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso necesario para registrar tarjetas.');
+        }
 
         $bancos = Banco::activos()->orderBy('nombre')->get();
         return view('tarjetas.create', compact('bancos'));
@@ -59,6 +61,10 @@ class TarjetaController extends Controller
 
     public function store(Request $request)
     {
+        if (!auth()->user()->hasPermission('tarjetas.create')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso necesario para registrar tarjetas.');
+        }
+
         $validated = $request->validate([
             'banco_id' => 'required|exists:bancos,id',
             'nombre' => 'required|string|max:100',
@@ -75,12 +81,20 @@ class TarjetaController extends Controller
 
     public function edit(Tarjeta $tarjeta)
     {
+        if (!auth()->user()->hasPermission('tarjetas.edit')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso necesario para editar tarjetas.');
+        }
+
         $bancos = Banco::activos()->orderBy('nombre')->get();
         return view('tarjetas.edit', compact('tarjeta', 'bancos'));
     }
 
     public function update(Request $request, Tarjeta $tarjeta)
     {
+        if (!auth()->user()->hasPermission('tarjetas.edit')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso necesario para editar tarjetas.');
+        }
+
         $validated = $request->validate([
             'banco_id' => 'required|exists:bancos,id',
             'nombre' => 'required|string|max:100',
@@ -97,6 +111,10 @@ class TarjetaController extends Controller
 
     public function destroy(Tarjeta $tarjeta)
     {
+        if (!auth()->user()->hasPermission('tarjetas.delete')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso necesario para eliminar tarjetas.');
+        }
+
         if ($tarjeta->movimientos()->count() > 0 || $tarjeta->pagos()->count() > 0) {
             return redirect()->route('tarjetas.index')->with('error', 'No se puede eliminar la tarjeta porque tiene transacciones registradas.');
         }

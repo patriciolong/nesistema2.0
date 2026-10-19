@@ -14,6 +14,14 @@ Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'inde
 Route::get('/portal', [App\Http\Controllers\PortalClienteController::class, 'index'])->name('portal.app');
 Route::get('/app', [App\Http\Controllers\PortalClienteController::class, 'index'])->name('portal.mobile');
 
+// Política de Privacidad y Términos de Uso de la App Móvil (Google Play / App Store)
+Route::get('/privacidad', function () {
+    return view('privacy');
+})->name('privacy');
+Route::get('/politica-de-privacidad', function () {
+    return view('privacy');
+});
+
 Route::middleware('auth')->group(function () {
     // Rutas para Módulo de Análisis con IA y Dashboard Dinámico
     Route::get('dashboard/export', [App\Http\Controllers\DashboardController::class, 'export'])->name('dashboard.export');
@@ -30,6 +38,8 @@ Route::middleware('auth')->group(function () {
     Route::post('cartera/cobrar', [App\Http\Controllers\CarteraController::class, 'cobrar'])->name('cartera.cobrar');
 
     Route::get('clientes/export', [App\Http\Controllers\ClienteController::class, 'export'])->name('clientes.export');
+    Route::post('clientes/importar', [App\Http\Controllers\ClienteController::class, 'import'])->name('clientes.import');
+    Route::get('clientes/plantilla-excel', [App\Http\Controllers\ClienteController::class, 'downloadTemplate'])->name('clientes.template');
     
     // Rutas para Módulo Global de Trámites Realizados (Historial y Explorador General)
     Route::get('tramites/realizados', [App\Http\Controllers\TramiteGlobalController::class, 'index'])->name('tramites.realizados.index');
@@ -77,6 +87,10 @@ Route::middleware('auth')->group(function () {
     Route::post('plantillas-membretes/upload-image', [App\Http\Controllers\PlantillaMembreteController::class, 'uploadImage'])->name('plantillas-membretes.upload_image');
     Route::resource('plantillas-membretes', App\Http\Controllers\PlantillaMembreteController::class)->parameters(['plantillas-membretes' => 'membrete']);
 
+    // Expediente de Documentos Emitidos desde Plantillas
+    Route::get('plantillas/expediente', [App\Http\Controllers\PlantillaController::class, 'expediente'])->name('plantillas.expediente');
+    Route::delete('plantillas/expediente/{documento}', [App\Http\Controllers\PlantillaController::class, 'destroyExpediente'])->name('plantillas.expediente.destroy');
+
     Route::resource('plantillas', App\Http\Controllers\PlantillaController::class);
 
     // Rutas para Módulo Financiero: Bancos y Tarjetas
@@ -112,6 +126,55 @@ Route::middleware('auth')->group(function () {
     Route::get('permisos/{user}/edit', [App\Http\Controllers\PermisoController::class, 'edit'])->name('permisos.edit');
     Route::put('permisos/{user}', [App\Http\Controllers\PermisoController::class, 'update'])->name('permisos.update');
     Route::post('permisos/{user}/preset', [App\Http\Controllers\PermisoController::class, 'applyPreset'])->name('permisos.preset');
+
+    // Rutas para Módulo de Chat en Vivo con Clientes
+    Route::get('chat', [App\Http\Controllers\ChatController::class, 'index'])->name('chat.index');
+    Route::get('chat/conversaciones', [App\Http\Controllers\ChatController::class, 'conversaciones'])->name('chat.conversaciones');
+    Route::get('chat/mensajes/{id}', [App\Http\Controllers\ChatController::class, 'mensajes'])->name('chat.mensajes');
+    Route::post('chat/enviar/{id}', [App\Http\Controllers\ChatController::class, 'enviar'])->name('chat.enviar');
+    Route::get('chat/unread-count', [App\Http\Controllers\ChatController::class, 'unreadCount'])->name('chat.unread_count');
+
+    // Rutas para Módulo de Reseñas y Calificaciones de Clientes
+    Route::get('resenas', [App\Http\Controllers\ResenaController::class, 'index'])->name('resenas.index');
+    Route::get('resenas/export/excel', [App\Http\Controllers\ResenaController::class, 'exportExcel'])->name('resenas.export_excel');
+    Route::delete('resenas/{id}', [App\Http\Controllers\ResenaController::class, 'destroy'])->name('resenas.destroy');
+
+    // Rutas para Módulo de Gestión de Abogados y Directorio Web
+    Route::post('abogados/{abogado}/toggle-estado', [App\Http\Controllers\AbogadoController::class, 'toggleEstado'])->name('abogados.toggle_estado');
+    Route::resource('abogados', App\Http\Controllers\AbogadoController::class);
+
+    // Rutas para Módulo de Solicitudes Web y Leads
+    Route::get('leads', [App\Http\Controllers\LeadController::class, 'index'])->name('leads.index');
+    Route::post('leads/{lead}/cambiar-estado', [App\Http\Controllers\LeadController::class, 'toggleEstado'])->name('leads.cambiar_estado');
+    Route::delete('leads/{lead}', [App\Http\Controllers\LeadController::class, 'destroy'])->name('leads.destroy');
+});
+
+// Endpoint Público para sincronización con Página Web Notaría
+Route::get('api/public/abogados', [App\Http\Controllers\AbogadoController::class, 'apiPublicList'])->name('api.public.abogados.list');
+Route::get('api/public/abogados/{id}', [App\Http\Controllers\AbogadoController::class, 'apiPublicShow'])->name('api.public.abogados.show');
+
+// Ruta de respaldo para servir archivos de storage en Hostinger si el symlink no está activo
+Route::get('storage/{path}', function ($path) {
+    $fullPath = storage_path('app/public/' . $path);
+    if (!file_exists($fullPath)) {
+        abort(404);
+    }
+    $file = file_get_contents($fullPath);
+    $type = mime_content_type($fullPath) ?: 'image/jpeg';
+    return response($file, 200)
+        ->header('Content-Type', $type)
+        ->header('Cache-Control', 'public, max-age=86400');
+})->where('path', '.*')->name('storage.fallback');
+
+// Ruta de utilidad para crear el enlace simbólico storage:link desde el navegador en Hostinger
+Route::get('crear-storage-link', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('storage:link');
+        return response()->json(['success' => true, 'message' => 'Enlace de storage:link creado exitosamente en el servidor.']);
+    } catch (\Throwable $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
+    }
 });
 
 require __DIR__.'/auth.php';
+

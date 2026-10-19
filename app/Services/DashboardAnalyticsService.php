@@ -203,9 +203,7 @@ class DashboardAnalyticsService
         $divorciosCount = $this->countTramites(TramiteDivorcio::class, 'td_fecha', 'td_oficina', $range, $oficina);
         $impuestosCount = $this->countTramites(TramiteImpuesto::class, 'ti_fecha', 'ti_oficina', $range, $oficina);
         $personalizadosCount = $this->countTramites(TramitePersonalizado::class, 'fecha', 'oficina', $range, $oficina);
-        $documentosCount = $this->countTramites(DocumentoGenerado::class, 'created_at', null, $range, $oficina);
-
-        $totalTramites = $poderesCount + $variosCount + $divorciosCount + $impuestosCount + $personalizadosCount + $documentosCount;
+        $totalTramites = $poderesCount + $variosCount + $divorciosCount + $impuestosCount + $personalizadosCount;
 
         $tramitesCategorias = [
             [
@@ -242,13 +240,6 @@ class DashboardAnalyticsService
                 'porcentaje' => $totalTramites > 0 ? round(($personalizadosCount / $totalTramites) * 100, 1) : 0,
                 'color' => '#a855f7',
                 'icono' => 'template',
-            ],
-            [
-                'categoria' => 'Documentos Notariales',
-                'cantidad' => $documentosCount,
-                'porcentaje' => $totalTramites > 0 ? round(($documentosCount / $totalTramites) * 100, 1) : 0,
-                'color' => '#f59e0b',
-                'icono' => 'printer',
             ],
         ];
 

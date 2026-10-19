@@ -19,7 +19,7 @@ class TramiteVario extends Model
         'tv_traducciones', 'tv_notarizacion', 'tv_certificacion', 'tv_apostilla',
         'tv_valor_tramite', 'tv_abono_tramite', 'tv_saldo', 'tv_observaciones',
         'tv_oficina', 'tv_fecha', 'tv_razon_t', 'tv_firmar_en',
-        'estado', 'fecha_completado', 'notificado_at'
+        'estado', 'documento_pdf', 'fecha_completado', 'notificado_at'
     ];
 
     public function cliente()

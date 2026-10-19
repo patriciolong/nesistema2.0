@@ -9,8 +9,8 @@ class BancoController extends Controller
 {
     public function index(Request $request)
     {
-        if (!auth()->user()->hasPermission('bancos.manage')) {
-            abort(403, 'Acceso denegado: No cuentas con el permiso necesario para gestionar entidades bancarias.');
+        if (!auth()->user()->hasPermission('bancos.view')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso necesario para ver entidades bancarias.');
         }
 
         $query = Banco::withCount('tarjetas');
@@ -41,13 +41,19 @@ class BancoController extends Controller
 
     public function create()
     {
-        if (!auth()->user()->hasPermission('bancos.manage')) abort(403);
+        if (!auth()->user()->hasPermission('bancos.create')) {
+            abort(403, 'Acceso denegado: No tienes permiso para registrar nuevos bancos.');
+        }
 
         return view('bancos.create');
     }
 
     public function store(Request $request)
     {
+        if (!auth()->user()->hasPermission('bancos.create')) {
+            abort(403, 'Acceso denegado: No tienes permiso para registrar nuevos bancos.');
+        }
+
         $validated = $request->validate([
             'nombre' => 'required|string|max:100',
             'codigo' => 'nullable|string|max:50',
@@ -63,11 +69,19 @@ class BancoController extends Controller
 
     public function edit(Banco $banco)
     {
+        if (!auth()->user()->hasPermission('bancos.edit')) {
+            abort(403, 'Acceso denegado: No tienes permiso para editar bancos.');
+        }
+
         return view('bancos.edit', compact('banco'));
     }
 
     public function update(Request $request, Banco $banco)
     {
+        if (!auth()->user()->hasPermission('bancos.edit')) {
+            abort(403, 'Acceso denegado: No tienes permiso para editar bancos.');
+        }
+
         $validated = $request->validate([
             'nombre' => 'required|string|max:100',
             'codigo' => 'nullable|string|max:50',
@@ -83,6 +97,10 @@ class BancoController extends Controller
 
     public function destroy(Banco $banco)
     {
+        if (!auth()->user()->hasPermission('bancos.delete')) {
+            abort(403, 'Acceso denegado: No tienes permiso para eliminar bancos.');
+        }
+
         if ($banco->tarjetas()->count() > 0) {
             return redirect()->route('bancos.index')->with('error', 'No se puede eliminar el banco porque tiene tarjetas o datáfonos asociados.');
         }

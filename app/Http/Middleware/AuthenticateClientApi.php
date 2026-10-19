@@ -14,7 +14,25 @@ class AuthenticateClientApi
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $token = $request->bearerToken() ?: $request->input('api_token');
+        // 1. Obtener el token desde múltiples fuentes (Bearer, Headers alternativos, Query o Body)
+        $token = $request->bearerToken();
+
+        if (!$token) {
+            $authHeader = $request->header('Authorization') 
+                ?: ($request->server('HTTP_AUTHORIZATION') ?: $request->server('REDIRECT_HTTP_AUTHORIZATION'));
+            
+            if ($authHeader && preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+                $token = trim($matches[1]);
+            }
+        }
+
+        if (!$token) {
+            $token = $request->header('X-Client-Token') 
+                ?: ($request->query('token') 
+                ?: ($request->query('api_token') 
+                ?: ($request->input('token') 
+                ?: $request->input('api_token'))));
+        }
 
         if (!$token) {
             return response()->json([

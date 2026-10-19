@@ -6,6 +6,9 @@ use App\Models\Cliente;
 use App\Models\TipoTramite;
 use App\Models\TramitePersonalizado;
 use App\Models\TramiteVario;
+use App\Models\TramitePoder;
+use App\Models\TramiteDivorcio;
+use App\Models\TramiteImpuesto;
 use App\Models\DocumentoGenerado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,9 +22,9 @@ class TramiteController extends Controller
     {
         // 1. Procedimientos nativos
         $tramitesVarios = TramiteVario::where('id_cliente', $cliente->id_cliente)->get();
-        $divorcios = DB::table('tramite_divorcio')->where('id_cliente', $cliente->id_cliente)->get();
-        $impuestos = DB::table('tramite_impuestos')->where('id_cliente', $cliente->id_cliente)->get();
-        $poderes = DB::table('tramite_poderes')->where('id_cliente', $cliente->id_cliente)->get();
+        $divorcios = TramiteDivorcio::where('id_cliente', $cliente->id_cliente)->get();
+        $impuestos = TramiteImpuesto::where('id_cliente', $cliente->id_cliente)->get();
+        $poderes = TramitePoder::where('id_cliente', $cliente->id_cliente)->get();
 
         // 2. Tipos de trámites personalizados activos
         $tiposPersonalizados = TipoTramite::where('activo', true)->orderBy('orden', 'asc')->get();
@@ -221,53 +224,49 @@ class TramiteController extends Controller
             'tramite_tipo' => 'required|string|in:personalizados,poderes,divorcios,impuestos,varios,documentos',
             'tramite_id' => 'required|integer',
             'estado' => 'required|string|in:en_proceso,en_revision,listo,entregado,cancelado',
+            'documento_pdf' => 'nullable|file|mimes:pdf|max:25600',
+            'observaciones' => 'nullable|string|max:1000',
         ]);
 
         $clienteId = $request->input('cliente_id');
         $tramiteTipo = $request->input('tramite_tipo');
         $tramiteId = $request->input('tramite_id');
         $nuevoEstado = $request->input('estado');
+        $observaciones = $request->input('observaciones');
 
+        // Obtener el registro actual del trámite
+        $tramite = null;
         $nombreTramite = 'Trámite Notarial';
         $oficina = null;
-
-        $updateData = ['estado' => $nuevoEstado];
-        if ($nuevoEstado === 'listo' || $nuevoEstado === 'entregado') {
-            $updateData['fecha_completado'] = now();
-        }
 
         switch ($tramiteTipo) {
             case 'personalizados':
                 $tramite = TramitePersonalizado::with('tipoTramite')->find($tramiteId);
                 if ($tramite) {
-                    $tramite->update($updateData);
                     $nombreTramite = $tramite->tipoTramite ? $tramite->tipoTramite->nombre : 'Trámite Personalizado';
                     $oficina = $tramite->oficina;
                 }
                 break;
 
             case 'poderes':
-                $tramite = DB::table('tramite_poderes')->where('id_tram_poderes', $tramiteId)->first();
+                $tramite = TramitePoder::find($tramiteId);
                 if ($tramite) {
-                    DB::table('tramite_poderes')->where('id_tram_poderes', $tramiteId)->update($updateData);
                     $nombreTramite = 'Poder Notarial (' . ($tramite->tp_razon_otorga_poder ?: 'General') . ')';
                     $oficina = $tramite->tp_oficina;
                 }
                 break;
 
             case 'divorcios':
-                $tramite = DB::table('tramite_divorcio')->where('id_tram_div', $tramiteId)->first();
+                $tramite = TramiteDivorcio::find($tramiteId);
                 if ($tramite) {
-                    DB::table('tramite_divorcio')->where('id_tram_div', $tramiteId)->update($updateData);
                     $nombreTramite = 'Trámite de Divorcio';
                     $oficina = $tramite->td_oficina;
                 }
                 break;
 
             case 'impuestos':
-                $tramite = DB::table('tramite_impuestos')->where('id_tram_impuestos', $tramiteId)->first();
+                $tramite = TramiteImpuesto::find($tramiteId);
                 if ($tramite) {
-                    DB::table('tramite_impuestos')->where('id_tram_impuestos', $tramiteId)->update($updateData);
                     $nombreTramite = 'Declaración de Impuestos / ITIN';
                     $oficina = $tramite->ti_oficina;
                 }
@@ -276,7 +275,6 @@ class TramiteController extends Controller
             case 'varios':
                 $tramite = TramiteVario::find($tramiteId);
                 if ($tramite) {
-                    $tramite->update($updateData);
                     $nombreTramite = 'Trámite Vario: ' . ($tramite->tv_motivo ?: 'Gestión Notarial');
                     $oficina = $tramite->tv_oficina;
                 }
@@ -285,31 +283,92 @@ class TramiteController extends Controller
             case 'documentos':
                 $tramite = DocumentoGenerado::with('plantilla')->find($tramiteId);
                 if ($tramite) {
-                    $tramite->update($updateData);
                     $nombreTramite = $tramite->plantilla ? $tramite->plantilla->nombre_plantilla : 'Documento Notarial';
                 }
                 break;
         }
 
-        // Si el estado cambió a 'listo', enviar notificación al cliente
+        if (!$tramite) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El trámite especificado no fue encontrado.',
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'El trámite especificado no fue encontrado.');
+        }
+
+        $updateData = ['estado' => $nuevoEstado];
+
+        // Manejo de carga de documento PDF
+        if ($request->hasFile('documento_pdf')) {
+            $file = $request->file('documento_pdf');
+            $destinationPath = public_path('uploads/tramites_documentos');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0755, true);
+            }
+            $fileName = 'doc_' . $tramiteTipo . '_' . $tramiteId . '_' . time() . '_' . substr(md5(uniqid()), 0, 6) . '.pdf';
+            $file->move($destinationPath, $fileName);
+            $updateData['documento_pdf'] = 'uploads/tramites_documentos/' . $fileName;
+        }
+
+        // Validación estricta: Si se cambia a 'listo', DEBE tener o subirse el documento PDF
+        if ($nuevoEstado === 'listo') {
+            $tienePdf = !empty($updateData['documento_pdf']) || !empty($tramite->documento_pdf);
+            if (!$tienePdf) {
+                $errorMsg = '⚠️ Para marcar el trámite como "Listo para entregar" es obligatorio cargar el documento en PDF.';
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $errorMsg,
+                    ], 422);
+                }
+                return redirect()->back()->with('error', $errorMsg);
+            }
+
+            $updateData['fecha_completado'] = now();
+        } elseif ($nuevoEstado === 'entregado') {
+            if (empty($tramite->fecha_completado)) {
+                $updateData['fecha_completado'] = now();
+            }
+        }
+
+        // Guardar cambios
+        $tramite->update($updateData);
+
+        // Si el estado cambió a 'listo', enviar notificación destacada al cliente
         if ($nuevoEstado === 'listo') {
             app(\App\Services\ClientNotificationService::class)->notificarTramiteListo(
                 $clienteId,
                 $tramiteTipo,
                 $tramiteId,
                 $nombreTramite,
-                $oficina
+                $oficina,
+                $observaciones
+            );
+        } else {
+            app(\App\Services\ClientNotificationService::class)->notificarActualizacionTramite(
+                $clienteId,
+                $tramiteTipo,
+                $tramiteId,
+                $nombreTramite,
+                $nuevoEstado,
+                $observaciones
             );
         }
+
+        $documentoPdfUrl = !empty($tramite->documento_pdf) ? asset($tramite->documento_pdf) : null;
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => '¡Estado actualizado exitosamente!' . ($nuevoEstado === 'listo' ? ' Notificación enviada al cliente.' : ''),
+                'message' => '¡Estado actualizado a Listo para entregar exitosamente!' . ($nuevoEstado === 'listo' ? ' Notificación enviada al cliente con el documento adjunto.' : ''),
                 'nuevo_estado' => $nuevoEstado,
+                'documento_pdf' => $tramite->documento_pdf,
+                'documento_pdf_url' => $documentoPdfUrl,
             ]);
         }
 
-        return redirect()->back()->with('success', '¡Estado del trámite actualizado exitosamente!' . ($nuevoEstado === 'listo' ? ' Se envió una alerta y notificación al cliente.' : ''));
+        return redirect()->back()->with('success', '¡Estado del trámite actualizado exitosamente!' . ($nuevoEstado === 'listo' ? ' Se notificó al cliente que su trámite está listo para entregar.' : ''));
     }
 }

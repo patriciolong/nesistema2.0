@@ -30,6 +30,10 @@ class CarteraController extends Controller
      */
     public function index(Request $request)
     {
+        if (!Auth::user()->hasPermission('cartera.view') && !Auth::user()->hasPermission('clientes.view')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso para consultar la cartera de clientes.');
+        }
+
         $query = Cliente::query();
 
         // 1. Buscador por nombre, apellido, cédula, teléfono o email
@@ -237,6 +241,10 @@ class CarteraController extends Controller
      */
     public function cobrar(Request $request)
     {
+        if (!Auth::user()->hasPermission('cartera.cobrar') && !Auth::user()->hasPermission('clientes.abonar')) {
+            return redirect()->back()->with('error', 'Acceso denegado: No cuentas con el permiso para realizar cobros de cartera.');
+        }
+
         $request->validate([
             'cliente_id' => 'required|integer|exists:cliente,id_cliente',
             'modo_cobro' => 'required|string|in:individual,multiple,total',

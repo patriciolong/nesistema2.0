@@ -63,6 +63,16 @@ class Cliente extends Model
             ->orderBy('created_at', 'desc');
     }
 
+    public function chatConversacion()
+    {
+        return $this->hasOne(ChatConversacion::class, 'id_cliente', 'id_cliente');
+    }
+
+    public function resenas(): HasMany
+    {
+        return $this->hasMany(ResenaTramite::class, 'id_cliente', 'id_cliente');
+    }
+
     /**
      * Check if password matches.
      */

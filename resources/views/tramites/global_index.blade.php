@@ -113,7 +113,7 @@
             <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
                 <div class="flex justify-between items-start">
                     <div>
-                        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">Listos / Entregados</p>
+                        <p class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">Listos para entregar / Entregados</p>
                         <h3 class="text-2xl font-black text-indigo-700 mt-1">{{ number_format($totalListos) }}</h3>
                     </div>
                     <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
@@ -188,7 +188,7 @@
                         <option value="todos" {{ request('estado') === 'todos' ? 'selected' : '' }}>🔄 Todos los Estados</option>
                         <option value="en_proceso" {{ request('estado') === 'en_proceso' ? 'selected' : '' }}>🟡 En Proceso</option>
                         <option value="en_revision" {{ request('estado') === 'en_revision' ? 'selected' : '' }}>🔵 En Revisión</option>
-                        <option value="listo" {{ request('estado') === 'listo' ? 'selected' : '' }}>🟢 Listo para Entrega</option>
+                        <option value="listo" {{ request('estado') === 'listo' ? 'selected' : '' }}>🟢 Listo para entregar</option>
                         <option value="entregado" {{ request('estado') === 'entregado' ? 'selected' : '' }}>⚪ Entregado al Cliente</option>
                     </select>
                 </div>
@@ -350,7 +350,7 @@
                                                 class="estado-select text-xs font-black py-1.5 px-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 cursor-pointer transition-all shadow-sm {{ $t['estado'] === 'listo' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : ($t['estado'] === 'en_revision' ? 'bg-blue-50 text-blue-700 border-blue-300' : ($t['estado'] === 'entregado' ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-amber-50 text-amber-800 border-amber-300')) }}">
                                             <option value="en_proceso" {{ $t['estado'] === 'en_proceso' ? 'selected' : '' }}>🟡 En Proceso</option>
                                             <option value="en_revision" {{ $t['estado'] === 'en_revision' ? 'selected' : '' }}>🔵 En Revisión</option>
-                                            <option value="listo" {{ $t['estado'] === 'listo' ? 'selected' : '' }}>🟢 Listo</option>
+                                            <option value="listo" {{ $t['estado'] === 'listo' ? 'selected' : '' }}>🟢 Listo para entregar</option>
                                             <option value="entregado" {{ $t['estado'] === 'entregado' ? 'selected' : '' }}>⚪ Entregado</option>
                                         </select>
                                     </td>
@@ -358,7 +358,7 @@
                                     <!-- Importe, Abono y Saldo -->
                                     <td class="py-3.5 px-4 text-right">
                                         @if($t['costo'] > 0)
-                                            <span class="text-sm font-black text-slate-900 block">
+                                             <span class="text-sm font-black text-slate-900 block">
                                                 ${{ number_format($t['costo'], 2) }}
                                             </span>
                                             @if($t['saldo'] <= 0)
@@ -382,14 +382,20 @@
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                             </button>
 
+                                            @if(!empty($t['documento_pdf']))
+                                                <a href="{{ asset($t['documento_pdf']) }}" target="_blank" class="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white transition-all shadow-sm" title="Ver Documento PDF Listo">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                </a>
+                                            @endif
+
                                             @if($t['route_pdf'] && $t['route_pdf'] !== '#')
-                                                <a href="{{ $t['route_pdf'] }}" target="_blank" class="p-2 rounded-xl bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white transition-all shadow-sm" title="Imprimir PDF (1 Hoja)">
+                                                <a href="{{ $t['route_pdf'] }}" target="_blank" class="p-2 rounded-xl bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white transition-all shadow-sm" title="Imprimir Comprobante (1 Hoja)">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                                 </a>
                                             @endif
 
                                             @if($t['cliente_id'])
-                                                <a href="{{ route('clientes.tramites', $t['cliente_id']) }}" class="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white transition-all shadow-sm" title="Ir al Expediente del Cliente">
+                                                <a href="{{ route('clientes.tramites', $t['cliente_id']) }}" class="p-2 rounded-xl bg-slate-50 hover:bg-slate-600 text-slate-600 hover:text-white transition-all shadow-sm" title="Ir al Expediente del Cliente">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                                                 </a>
                                             @endif
@@ -513,7 +519,12 @@
                 <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
                     <a id="modalPdfLink" href="#" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                        <span>Imprimir Comprobante PDF (1 Hoja)</span>
+                        <span>Imprimir Comprobante (1 Hoja)</span>
+                    </a>
+
+                    <a id="modalDocFinalPdfLink" href="#" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all" style="display: none;">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span>Descargar PDF Listo</span>
                     </a>
 
                     <div class="flex items-center gap-2 w-full sm:w-auto">
@@ -530,12 +541,107 @@
         </div>
     </div>
 
+    <!-- MODAL: SUBIR PDF AL MARCAR "LISTO PARA ENTREGAR" -->
+    <div id="modalSubirPdfGlobal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-pdf-global-title" role="dialog" aria-modal="true">
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="cerrarModalPdfGlobal()"></div>
+
+            <div class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-200">
+                <form id="formSubirPdfGlobal" onsubmit="enviarPdfGlobal(event)">
+                    @csrf
+                    <input type="hidden" name="cliente_id" id="global_pdf_cliente_id" value="">
+                    <input type="hidden" name="tramite_tipo" id="global_pdf_tramite_tipo" value="">
+                    <input type="hidden" name="tramite_id" id="global_pdf_tramite_id" value="">
+                    <input type="hidden" name="estado" value="listo">
+
+                    <!-- Header Modal -->
+                    <div class="bg-gradient-to-r from-emerald-600 to-teal-700 px-6 py-5 text-white flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-white/15 backdrop-blur-md rounded-xl border border-white/20">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-black tracking-tight" id="modal-pdf-global-title">Cargar Documento Final PDF</h3>
+                                <p class="text-xs text-emerald-100 font-medium" id="global_pdf_tramite_desc">Listo para entregar</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="cerrarModalPdfGlobal()" class="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-xl transition-all cursor-pointer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- Body Modal -->
+                    <div class="p-6 space-y-4">
+                        <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 leading-relaxed font-medium flex items-start gap-2.5">
+                            <span class="text-base leading-none">ℹ️</span>
+                            <div>
+                                Para cambiar el estado a <strong>Listo para entregar</strong>, es obligatorio cargar el <strong>documento final en PDF</strong> redactado y listo para que el cliente lo consulte o retire.
+                            </div>
+                        </div>
+
+                        <!-- Dropzone / Input de Archivo -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Archivo PDF del Documento <span class="text-red-500">*</span></label>
+                            <div id="dropzonePdfGlobal" onclick="document.getElementById('inputDocumentoPdfGlobal').click()" 
+                                 class="border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50 hover:bg-emerald-50/40 rounded-2xl p-6 text-center cursor-pointer transition-all">
+                                <input type="file" id="inputDocumentoPdfGlobal" name="documento_pdf" accept="application/pdf" class="hidden" onchange="actualizarPreviewPdfGlobal(this)">
+                                
+                                <div id="previewPdfEmptyGlobal" class="space-y-2">
+                                    <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl shadow-xs">
+                                        📄
+                                    </div>
+                                    <div class="text-xs font-bold text-slate-700">
+                                        <span class="text-emerald-700 underline">Haz clic para seleccionar</span> o arrastra el archivo aquí
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 font-medium">Solo archivos PDF (Máx. 25 MB)</p>
+                                </div>
+
+                                <div id="previewPdfSelectedGlobal" class="hidden space-y-2">
+                                    <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-xl shadow-md">
+                                        ✓
+                                    </div>
+                                    <div class="text-xs font-black text-slate-900 truncate max-w-xs mx-auto" id="nombreArchivoPdfGlobal">
+                                        documento.pdf
+                                    </div>
+                                    <p class="text-[11px] text-emerald-600 font-bold" id="tamanoArchivoPdfGlobal">0 KB</p>
+                                    <button type="button" onclick="event.stopPropagation(); limpiarArchivoPdfGlobal();" class="text-[11px] font-bold text-rose-600 hover:underline">
+                                        Cambiar archivo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="globalPdfErrorMsg" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-700"></div>
+                    </div>
+
+                    <!-- Footer Modal -->
+                    <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-end gap-3">
+                        <button type="button" onclick="cerrarModalPdfGlobal()" class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
+                            Cancelar
+                        </button>
+                        <button type="submit" id="btnConfirmarPdfGlobal" class="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-extrabold shadow-md shadow-emerald-200 transition-all cursor-pointer">
+                            <span>🟢 Subir PDF y Marcar Listo</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts para Cambio de Estado AJAX y Modal -->
     <script>
+        let activeGlobalSelect = null;
+
         // Actualización de estado en tiempo real vía AJAX
         function actualizarEstadoTramite(selectElement, tramiteTipo, tramiteId, clienteId) {
             const nuevoEstado = selectElement.value;
             const prevEstado = selectElement.getAttribute('data-previous') || 'en_proceso';
+
+            // Si es "listo", abrir modal de subida de PDF
+            if (nuevoEstado === 'listo') {
+                abrirModalPdfGlobal(selectElement, tramiteTipo, tramiteId, clienteId);
+                return;
+            }
 
             // Actualizar estilo visual del select inmediatamente
             selectElement.className = 'estado-select text-xs font-black py-1.5 px-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 cursor-pointer transition-all shadow-sm ' + 
@@ -561,7 +667,7 @@
             .then(data => {
                 if (data.success) {
                     selectElement.setAttribute('data-previous', nuevoEstado);
-                    mostrarToast('Estado actualizado a: ' + nuevoEstado.toUpperCase(), 'success');
+                    mostrarToast('Estado actualizado: ' + (nuevoEstado === 'listo' ? 'Listo para entregar' : nuevoEstado.toUpperCase()), 'success');
                 } else {
                     selectElement.value = prevEstado;
                     mostrarToast(data.message || 'Error al actualizar el estado', 'error');
@@ -573,6 +679,147 @@
                 mostrarToast('Error de conexión con el servidor', 'error');
             });
         }
+
+        function abrirModalPdfGlobal(selectEl, tipo, id, clienteId) {
+            activeGlobalSelect = selectEl;
+            document.getElementById('global_pdf_cliente_id').value = clienteId;
+            document.getElementById('global_pdf_tramite_tipo').value = tipo;
+            document.getElementById('global_pdf_tramite_id').value = id;
+            document.getElementById('global_pdf_tramite_desc').innerText = tipo.toUpperCase() + ' #' + id;
+
+            limpiarArchivoPdfGlobal();
+            document.getElementById('globalPdfErrorMsg').classList.add('hidden');
+            document.getElementById('modalSubirPdfGlobal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrarModalPdfGlobal() {
+            document.getElementById('modalSubirPdfGlobal').classList.add('hidden');
+            document.body.style.overflow = '';
+            if (activeGlobalSelect) {
+                const prev = activeGlobalSelect.getAttribute('data-previous') || 'en_proceso';
+                activeGlobalSelect.value = prev;
+                activeGlobalSelect.className = 'estado-select text-xs font-black py-1.5 px-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 cursor-pointer transition-all shadow-sm ' + 
+                    (prev === 'listo' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : 
+                    (prev === 'en_revision' ? 'bg-blue-50 text-blue-700 border-blue-300' : 
+                    (prev === 'entregado' ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-amber-50 text-amber-800 border-amber-300')));
+                activeGlobalSelect = null;
+            }
+        }
+
+        function actualizarPreviewPdfGlobal(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                    alert('Por favor selecciona únicamente archivos en formato PDF.');
+                    input.value = '';
+                    return;
+                }
+                document.getElementById('nombreArchivoPdfGlobal').innerText = file.name;
+                const sizeKb = (file.size / 1024).toFixed(1);
+                document.getElementById('tamanoArchivoPdfGlobal').innerText = (sizeKb > 1024 ? (sizeKb / 1024).toFixed(2) + ' MB' : sizeKb + ' KB');
+                document.getElementById('previewPdfEmptyGlobal').classList.add('hidden');
+                document.getElementById('previewPdfSelectedGlobal').classList.remove('hidden');
+            }
+        }
+
+        function limpiarArchivoPdfGlobal() {
+            const input = document.getElementById('inputDocumentoPdfGlobal');
+            if (input) input.value = '';
+            document.getElementById('previewPdfEmptyGlobal').classList.remove('hidden');
+            document.getElementById('previewPdfSelectedGlobal').classList.add('hidden');
+        }
+
+        async function enviarPdfGlobal(event) {
+            event.preventDefault();
+            const input = document.getElementById('inputDocumentoPdfGlobal');
+            const errorBox = document.getElementById('globalPdfErrorMsg');
+            const btnSubmit = document.getElementById('btnConfirmarPdfGlobal');
+
+            if (!input.files || input.files.length === 0) {
+                errorBox.innerText = '⚠️ Debes seleccionar o arrastrar el archivo PDF final del trámite.';
+                errorBox.classList.remove('hidden');
+                return;
+            }
+
+            const modalForm = document.getElementById('formSubirPdfGlobal');
+            const formData = new FormData(modalForm);
+
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<span>⏳ Subiendo y actualizando...</span>';
+            errorBox.classList.add('hidden');
+
+            try {
+                const response = await fetch('{{ route("tramites.cambiar_estado") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    if (activeGlobalSelect) {
+                        activeGlobalSelect.setAttribute('data-previous', 'listo');
+                        activeGlobalSelect.value = 'listo';
+                        activeGlobalSelect.className = 'estado-select text-xs font-black py-1.5 px-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 cursor-pointer transition-all shadow-sm bg-emerald-50 text-emerald-700 border-emerald-300';
+                    }
+                    mostrarToast('🎉 ¡Trámite marcado como LISTO PARA ENTREGAR! Documento PDF cargado y alerta enviada.', 'success');
+                    
+                    activeGlobalSelect = null;
+                    document.getElementById('modalSubirPdfGlobal').classList.add('hidden');
+                    document.body.style.overflow = '';
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    throw new Error(data.message || 'Error al cargar el documento.');
+                }
+            } catch (error) {
+                console.error('Error al subir PDF listo global:', error);
+                errorBox.innerText = '⚠️ ' + (error.message || 'Error al procesar el archivo.');
+                errorBox.classList.remove('hidden');
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = '<span>🟢 Subir PDF y Marcar Listo</span>';
+            }
+        }
+
+        // Dropzone listeners
+        document.addEventListener('DOMContentLoaded', function () {
+            const dropzone = document.getElementById('dropzonePdfGlobal');
+            if (dropzone) {
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropzone.classList.add('border-emerald-500', 'bg-emerald-50');
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropzone.classList.remove('border-emerald-500', 'bg-emerald-50');
+                    }, false);
+                });
+
+                dropzone.addEventListener('drop', (e) => {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    if (files.length > 0) {
+                        const input = document.getElementById('inputDocumentoPdfGlobal');
+                        input.files = files;
+                        actualizarPreviewPdfGlobal(input);
+                    }
+                }, false);
+            }
+        });
 
         // Abrir modal desde elemento
         function abrirModalDesdeElemento(el) {
@@ -645,6 +892,16 @@
                 }
             }
 
+            const docFinalLink = document.getElementById('modalDocFinalPdfLink');
+            if (docFinalLink) {
+                if (tramite.documento_pdf || tramite.documento_pdf_url) {
+                    docFinalLink.href = tramite.documento_pdf_url || ('/' + tramite.documento_pdf);
+                    docFinalLink.style.display = 'inline-flex';
+                } else {
+                    docFinalLink.style.display = 'none';
+                }
+            }
+
             const clienteLink = document.getElementById('modalClienteTramitesLink');
             if (clienteLink) {
                 if (tramite.cliente_id) {
@@ -675,6 +932,7 @@
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 cerrarModalDetalle();
+                cerrarModalPdfGlobal();
             }
         });
 

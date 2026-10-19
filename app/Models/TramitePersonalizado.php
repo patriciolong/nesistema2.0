@@ -21,6 +21,7 @@ class TramitePersonalizado extends Model
         'usuario',
         'oficina',
         'estado',
+        'documento_pdf',
         'fecha_completado',
         'notificado_at',
     ];

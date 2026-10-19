@@ -10,8 +10,8 @@ class OficinaController extends Controller
 {
     public function index(Request $request)
     {
-        if (!auth()->user()->hasPermission('oficinas.manage')) {
-            abort(403, 'Acceso denegado: No cuentas con el permiso necesario para gestionar oficinas.');
+        if (!auth()->user()->hasPermission('oficinas.view')) {
+            abort(403, 'Acceso denegado: No cuentas con el permiso necesario para ver oficinas.');
         }
 
         $query = Oficina::query();
@@ -41,14 +41,14 @@ class OficinaController extends Controller
 
     public function create()
     {
-        if (!auth()->user()->hasPermission('oficinas.manage')) abort(403, 'Acceso denegado.');
+        if (!auth()->user()->hasPermission('oficinas.create')) abort(403, 'Acceso denegado.');
         
         return view('oficinas.create');
     }
 
     public function store(Request $request)
     {
-        if (!auth()->user()->hasPermission('oficinas.manage')) abort(403, 'Acceso denegado.');
+        if (!auth()->user()->hasPermission('oficinas.create')) abort(403, 'Acceso denegado.');
 
         $validated = $request->validate([
             'nombre' => ['required', 'string', 'max:255', 'unique:oficinas'],
@@ -64,14 +64,14 @@ class OficinaController extends Controller
 
     public function edit(Oficina $oficina)
     {
-        if (!auth()->user()->hasPermission('oficinas.manage')) abort(403, 'Acceso denegado.');
+        if (!auth()->user()->hasPermission('oficinas.edit')) abort(403, 'Acceso denegado.');
 
         return view('oficinas.edit', compact('oficina'));
     }
 
     public function update(Request $request, Oficina $oficina)
     {
-        if (!auth()->user()->hasPermission('oficinas.manage')) abort(403, 'Acceso denegado.');
+        if (!auth()->user()->hasPermission('oficinas.edit')) abort(403, 'Acceso denegado.');
 
         $validated = $request->validate([
             'nombre' => ['required', 'string', 'max:255', Rule::unique('oficinas')->ignore($oficina->id)],
@@ -87,7 +87,7 @@ class OficinaController extends Controller
 
     public function destroy(Oficina $oficina)
     {
-        if (!auth()->user()->hasPermission('oficinas.manage')) abort(403, 'Acceso denegado.');
+        if (!auth()->user()->hasPermission('oficinas.delete')) abort(403, 'Acceso denegado.');
 
         $oficina->delete();
 

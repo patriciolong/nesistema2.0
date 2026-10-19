@@ -199,13 +199,13 @@
                                         </div>
                                     </td>
                                     <td class="py-3.5 px-4 whitespace-nowrap">
-                                        @if($user->role === 'Administrador')
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-extrabold bg-purple-50 text-purple-700 border border-purple-200">
-                                                👑 Total (Superadmin)
-                                            </span>
-                                        @elseif($isCustom)
+                                        @if($isCustom)
                                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
                                                 🛠️ Matriz Personalizada
+                                            </span>
+                                        @elseif($user->role === 'Administrador')
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-extrabold bg-purple-50 text-purple-700 border border-purple-200">
+                                                👑 Total (Superadmin)
                                             </span>
                                         @else
                                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">

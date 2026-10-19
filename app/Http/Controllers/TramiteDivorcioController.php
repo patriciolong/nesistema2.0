@@ -24,6 +24,10 @@ class TramiteDivorcioController extends Controller
 
     public function create(Cliente $cliente)
     {
+        if (!Auth::user()->hasPermission('divorcios.create')) {
+            abort(403, 'Acceso restringido: No tienes permiso para crear trámites de divorcio.');
+        }
+
         $bancos = Banco::activos()->orderBy('nombre')->get();
         $tarjetas = Tarjeta::with('banco')->activas()->orderBy('nombre')->get();
         $cajaAbierta = $this->cajaService->getCajaAbierta(Auth::user());
@@ -33,6 +37,9 @@ class TramiteDivorcioController extends Controller
 
     public function store(Request $request, Cliente $cliente)
     {
+        if (!Auth::user()->hasPermission('divorcios.create')) {
+            abort(403, 'Acceso restringido: No tienes permiso para crear trámites de divorcio.');
+        }
         $validated = $request->validate([
             'ofifirmar' => ['required', 'string'],
             'fecha' => ['nullable', 'date'],

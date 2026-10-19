@@ -29,6 +29,10 @@ class TramitePoderController extends Controller
 
     public function create(Cliente $cliente)
     {
+        if (!Auth::user()->hasPermission('poderes.create')) {
+            abort(403, 'Acceso restringido: No tienes permiso para crear trámites de poder.');
+        }
+
         $bancos = Banco::activos()->orderBy('nombre')->get();
         $tarjetas = Tarjeta::with('banco')->activas()->orderBy('nombre')->get();
         $cajaAbierta = $this->cajaService->getCajaAbierta(Auth::user());
@@ -38,6 +42,9 @@ class TramitePoderController extends Controller
 
     public function store(Request $request, Cliente $cliente)
     {
+        if (!Auth::user()->hasPermission('poderes.create')) {
+            abort(403, 'Acceso restringido: No tienes permiso para crear trámites de poder.');
+        }
         $request->validate([
             'ofifirmar' => 'required|string',
             'fecha' => 'required|date',

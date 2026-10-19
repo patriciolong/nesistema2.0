@@ -45,3 +45,9 @@ mobile-client/ios/App/Pods/
 mobile-client/ios/App/build/
 
 node_modules
+
+# Proyectos externos y carpetas de respaldo
+PAGINA WEB NOTARIA/
+/PAGINA WEB NOTARIA/
+Nueva carpeta/
+/Nueva carpeta/

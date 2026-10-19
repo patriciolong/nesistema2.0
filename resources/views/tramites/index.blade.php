@@ -353,7 +353,7 @@
                                         </td>
                                         <td class="py-4 px-6 text-gray-600 font-medium">{{ $tp->fecha ? date('d/m/Y', strtotime($tp->fecha)) : $tp->created_at->format('d/m/Y') }}</td>
                                         <td class="py-4 px-6">
-                                            <form method="POST" action="{{ route('tramites.cambiar_estado') }}" class="form-cambiar-estado inline-flex items-center m-0">
+                                            <form method="POST" action="{{ route('tramites.cambiar_estado') }}" class="form-cambiar-estado inline-flex items-center m-0" data-desc="{{ $tp->tipoTramite->nombre ?? 'Trámite' }} #{{ $tp->id }}">
                                                 @csrf
                                                 <input type="hidden" name="cliente_id" value="{{ $cliente->id_cliente }}">
                                                 <input type="hidden" name="tramite_tipo" value="personalizados">
@@ -361,7 +361,7 @@
                                                 <select name="estado" data-previous="{{ $tp->estado ?? 'en_proceso' }}" class="estado-select text-[11px] font-bold py-1 px-2.5 rounded-lg border focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer {{ ($tp->estado ?? 'en_proceso') === 'listo' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : (($tp->estado ?? '') === 'en_revision' ? 'bg-blue-50 text-blue-700 border-blue-300' : (($tp->estado ?? '') === 'entregado' ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-amber-50 text-amber-800 border-amber-300')) }}">
                                                     <option value="en_proceso" {{ ($tp->estado ?? 'en_proceso') === 'en_proceso' ? 'selected' : '' }}>🟡 En Proceso</option>
                                                     <option value="en_revision" {{ ($tp->estado ?? '') === 'en_revision' ? 'selected' : '' }}>🔵 En Revisión</option>
-                                                    <option value="listo" {{ ($tp->estado ?? '') === 'listo' ? 'selected' : '' }}>🟢 ¡Listo / Notificar!</option>
+                                                    <option value="listo" {{ ($tp->estado ?? '') === 'listo' ? 'selected' : '' }}>🟢 Listo para entregar</option>
                                                     <option value="entregado" {{ ($tp->estado ?? '') === 'entregado' ? 'selected' : '' }}>⚪ Entregado</option>
                                                 </select>
                                             </form>
@@ -377,15 +377,21 @@
                                             </div>
                                         </td>
                                         <td class="py-4 px-6 text-center">
-                                            <div class="flex items-center justify-center gap-2">
+                                            <div class="flex items-center justify-center gap-1.5 flex-wrap">
                                                 @if($tp->saldo > 0)
                                                     <button type="button" onclick="abrirModalCobro('personalizados', {{ $tp->id }}, '{{ $tp->tipoTramite->nombre ?? 'Trámite' }} #{{ $tp->id }}', {{ $tp->saldo }})" class="inline-flex items-center gap-1 font-bold text-xs px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs cursor-pointer">
                                                         💵 Cobrar
                                                     </button>
                                                 @endif
-                                                <a href="{{ route('tramites-personalizados.show', $tp->id) }}" target="_blank" class="inline-flex items-center gap-1 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors border shadow-sm bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-600 hover:text-white">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                                                    PDF
+                                                @if(!empty($tp->documento_pdf))
+                                                    <a href="{{ asset($tp->documento_pdf) }}" target="_blank" class="inline-flex items-center gap-1 font-bold text-xs px-2.5 py-1.5 rounded-lg border shadow-sm bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-600 hover:text-white" title="Ver Documento PDF Listo">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                        <span>PDF Final</span>
+                                                    </a>
+                                                @endif
+                                                <a href="{{ route('tramites-personalizados.show', $tp->id) }}" target="_blank" class="inline-flex items-center gap-1 font-bold text-xs px-2.5 py-1.5 rounded-lg transition-colors border shadow-sm bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-600 hover:text-white" title="Imprimir Formulario">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                                    <span>Hoja</span>
                                                 </a>
                                             </div>
                                         </td>
@@ -434,7 +440,7 @@
                                                     </span>
                                                 </td>
                                                 <td class="py-4 px-6">
-                                                    <form method="POST" action="{{ route('tramites.cambiar_estado') }}" class="form-cambiar-estado inline-flex items-center m-0">
+                                                    <form method="POST" action="{{ route('tramites.cambiar_estado') }}" class="form-cambiar-estado inline-flex items-center m-0" data-desc="Trámite Vario #{{ $tramite->id_tramite_varios }}">
                                                         @csrf
                                                         <input type="hidden" name="cliente_id" value="{{ $cliente->id_cliente }}">
                                                         <input type="hidden" name="tramite_tipo" value="varios">
@@ -442,7 +448,7 @@
                                                         <select name="estado" data-previous="{{ $tramite->estado ?? 'en_proceso' }}" class="estado-select text-[11px] font-bold py-1 px-2.5 rounded-lg border focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer {{ ($tramite->estado ?? 'en_proceso') === 'listo' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : (($tramite->estado ?? '') === 'en_revision' ? 'bg-blue-50 text-blue-700 border-blue-300' : (($tramite->estado ?? '') === 'entregado' ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-amber-50 text-amber-800 border-amber-300')) }}">
                                                             <option value="en_proceso" {{ ($tramite->estado ?? 'en_proceso') === 'en_proceso' ? 'selected' : '' }}>🟡 En Proceso</option>
                                                             <option value="en_revision" {{ ($tramite->estado ?? '') === 'en_revision' ? 'selected' : '' }}>🔵 En Revisión</option>
-                                                            <option value="listo" {{ ($tramite->estado ?? '') === 'listo' ? 'selected' : '' }}>🟢 ¡Listo / Notificar!</option>
+                                                            <option value="listo" {{ ($tramite->estado ?? '') === 'listo' ? 'selected' : '' }}>🟢 Listo para entregar</option>
                                                             <option value="entregado" {{ ($tramite->estado ?? '') === 'entregado' ? 'selected' : '' }}>⚪ Entregado</option>
                                                         </select>
                                                     </form>
@@ -458,15 +464,21 @@
                                                     </div>
                                                 </td>
                                                 <td class="py-4 px-6 text-center">
-                                                    <div class="flex items-center justify-center gap-2">
+                                                    <div class="flex items-center justify-center gap-1.5 flex-wrap">
                                                         @if(($tramite->tv_saldo ?? 0) > 0)
                                                             <button type="button" onclick="abrirModalCobro('varios', {{ $tramite->id_tramite_varios }}, 'Trámite Vario #{{ $tramite->id_tramite_varios }}', {{ $tramite->tv_saldo }})" class="inline-flex items-center gap-1 font-bold text-xs px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs cursor-pointer">
                                                                 💵 Cobrar
                                                             </button>
                                                         @endif
-                                                        <a href="{{ route('tramites-varios.show', $tramite->id_tramite_varios) }}" target="_blank" class="inline-flex items-center gap-1 font-bold text-xs px-3 py-1.5 rounded-lg transition-colors border shadow-sm" style="background-color: #e0e7ff; color: #312e81; border-color: #c7d2fe;">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                                                            PDF
+                                                        @if(!empty($tramite->documento_pdf))
+                                                            <a href="{{ asset($tramite->documento_pdf) }}" target="_blank" class="inline-flex items-center gap-1 font-bold text-xs px-2.5 py-1.5 rounded-lg border shadow-sm bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-600 hover:text-white" title="Ver Documento PDF Listo">
+                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                                <span>PDF Final</span>
+                                                            </a>
+                                                        @endif
+                                                        <a href="{{ route('tramites-varios.show', $tramite->id_tramite_varios) }}" target="_blank" class="inline-flex items-center gap-1 font-bold text-xs px-2.5 py-1.5 rounded-lg transition-colors border shadow-sm" style="background-color: #e0e7ff; color: #312e81; border-color: #c7d2fe;" title="Imprimir Comprobante">
+                                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                                            <span>Hoja</span>
                                                         </a>
                                                     </div>
                                                 </td>
@@ -511,7 +523,7 @@
                                                             <span class="text-xs text-slate-500 font-semibold truncate">• {{ date('d/m/Y', strtotime($tramite->td_fecha)) }}</span>
                                                         @endif
                                                     </div>
-                                                    <form method="POST" action="{{ route('tramites.cambiar_estado') }}" class="form-cambiar-estado inline-flex items-center m-0 shrink-0">
+                                                    <form method="POST" action="{{ route('tramites.cambiar_estado') }}" class="form-cambiar-estado inline-flex items-center m-0 shrink-0" data-desc="Divorcio #{{ $tramite->id_tram_div }}">
                                                         @csrf
                                                         <input type="hidden" name="cliente_id" value="{{ $cliente->id_cliente }}">
                                                         <input type="hidden" name="tramite_tipo" value="divorcios">
@@ -519,7 +531,7 @@
                                                         <select name="estado" data-previous="{{ $tramite->estado ?? 'en_proceso' }}" class="estado-select text-xs font-bold py-1 px-2.5 rounded-lg border focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer {{ ($tramite->estado ?? 'en_proceso') === 'listo' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : (($tramite->estado ?? '') === 'en_revision' ? 'bg-blue-50 text-blue-700 border-blue-300' : (($tramite->estado ?? '') === 'entregado' ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-amber-50 text-amber-800 border-amber-300')) }}">
                                                             <option value="en_proceso" {{ ($tramite->estado ?? 'en_proceso') === 'en_proceso' ? 'selected' : '' }}>🟡 En Proceso</option>
                                                             <option value="en_revision" {{ ($tramite->estado ?? '') === 'en_revision' ? 'selected' : '' }}>🔵 En Revisión</option>
-                                                            <option value="listo" {{ ($tramite->estado ?? '') === 'listo' ? 'selected' : '' }}>🟢 ¡Listo!</option>
+                                                            <option value="listo" {{ ($tramite->estado ?? '') === 'listo' ? 'selected' : '' }}>🟢 Listo para entregar</option>
                                                             <option value="entregado" {{ ($tramite->estado ?? '') === 'entregado' ? 'selected' : '' }}>⚪ Entregado</option>
                                                         </select>
                                                     </form>
@@ -542,15 +554,21 @@
                                                             <span class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-bold text-[11px] border border-emerald-200">✓ Pagado</span>
                                                         @endif
                                                     </div>
-                                                    <div class="flex items-center gap-1.5 shrink-0">
+                                                    <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
                                                         @if(($tramite->td_saldo ?? 0) > 0)
                                                             <button type="button" onclick="abrirModalCobro('divorcios', {{ $tramite->id_tram_div }}, 'Divorcio #{{ $tramite->id_tram_div }}', {{ $tramite->td_saldo }})" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all cursor-pointer">
                                                                 <span>💵 Cobrar</span>
                                                             </button>
                                                         @endif
-                                                        <a href="{{ route('divorcios.show', $tramite->id_tram_div) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm border transition-colors bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100">
+                                                        @if(!empty($tramite->documento_pdf))
+                                                            <a href="{{ asset($tramite->documento_pdf) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm border transition-colors bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-600 hover:text-white" title="Ver Documento PDF Listo">
+                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                                <span>PDF Final</span>
+                                                            </a>
+                                                        @endif
+                                                        <a href="{{ route('divorcios.show', $tramite->id_tram_div) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm border transition-colors bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100" title="Imprimir Comprobante">
                                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                                                            <span>PDF</span>
+                                                            <span>Hoja</span>
                                                         </a>
                                                     </div>
                                                 </div>
@@ -589,10 +607,10 @@
                                                     <div class="flex items-center gap-2 min-w-0">
                                                         <span class="font-black text-slate-900 text-sm">#{{ str_pad($tramite->id_tram_impuestos, 5, '0', STR_PAD_LEFT) }}</span>
                                                         @if(!empty($tramite->ti_fecha))
-                                                            <span class="text-xs text-slate-500 font-semibold truncate">• {{ date('d/m/Y', strtotime($tramite->ti_fecha)) }}</span>
+                                                             <span class="text-xs text-slate-500 font-semibold truncate">• {{ date('d/m/Y', strtotime($tramite->ti_fecha)) }}</span>
                                                         @endif
                                                     </div>
-                                                    <form method="POST" action="{{ route('tramites.cambiar_estado') }}" class="form-cambiar-estado inline-flex items-center m-0 shrink-0">
+                                                    <form method="POST" action="{{ route('tramites.cambiar_estado') }}" class="form-cambiar-estado inline-flex items-center m-0 shrink-0" data-desc="Impuestos #{{ $tramite->id_tram_impuestos }}">
                                                         @csrf
                                                         <input type="hidden" name="cliente_id" value="{{ $cliente->id_cliente }}">
                                                         <input type="hidden" name="tramite_tipo" value="impuestos">
@@ -600,7 +618,7 @@
                                                         <select name="estado" data-previous="{{ $tramite->estado ?? 'en_proceso' }}" class="estado-select text-xs font-bold py-1 px-2.5 rounded-lg border focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer {{ ($tramite->estado ?? 'en_proceso') === 'listo' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : (($tramite->estado ?? '') === 'en_revision' ? 'bg-blue-50 text-blue-700 border-blue-300' : (($tramite->estado ?? '') === 'entregado' ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-amber-50 text-amber-800 border-amber-300')) }}">
                                                             <option value="en_proceso" {{ ($tramite->estado ?? 'en_proceso') === 'en_proceso' ? 'selected' : '' }}>🟡 En Proceso</option>
                                                             <option value="en_revision" {{ ($tramite->estado ?? '') === 'en_revision' ? 'selected' : '' }}>🔵 En Revisión</option>
-                                                            <option value="listo" {{ ($tramite->estado ?? '') === 'listo' ? 'selected' : '' }}>🟢 ¡Listo!</option>
+                                                            <option value="listo" {{ ($tramite->estado ?? '') === 'listo' ? 'selected' : '' }}>🟢 Listo para entregar</option>
                                                             <option value="entregado" {{ ($tramite->estado ?? '') === 'entregado' ? 'selected' : '' }}>⚪ Entregado</option>
                                                         </select>
                                                     </form>
@@ -623,15 +641,21 @@
                                                             <span class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-bold text-[11px] border border-emerald-200">✓ Pagado</span>
                                                         @endif
                                                     </div>
-                                                    <div class="flex items-center gap-1.5 shrink-0">
+                                                    <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
                                                         @if(($tramite->ti_saldo ?? 0) > 0)
                                                             <button type="button" onclick="abrirModalCobro('impuestos', {{ $tramite->id_tram_impuestos }}, 'Impuestos #{{ $tramite->id_tram_impuestos }}', {{ $tramite->ti_saldo }})" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all cursor-pointer">
                                                                 <span>💵 Cobrar</span>
                                                             </button>
                                                         @endif
-                                                        <a href="{{ route('impuestos.show', $tramite->id_tram_impuestos) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm border transition-colors bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100">
+                                                        @if(!empty($tramite->documento_pdf))
+                                                            <a href="{{ asset($tramite->documento_pdf) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm border transition-colors bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-600 hover:text-white" title="Ver Documento PDF Listo">
+                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                                <span>PDF Final</span>
+                                                            </a>
+                                                        @endif
+                                                        <a href="{{ route('impuestos.show', $tramite->id_tram_impuestos) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm border transition-colors bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100" title="Imprimir Formulario">
                                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                                                            <span>PDF</span>
+                                                            <span>Hoja</span>
                                                         </a>
                                                     </div>
                                                 </div>
@@ -673,7 +697,7 @@
                                                             <span class="text-xs text-slate-500 font-semibold truncate">• {{ date('d/m/Y', strtotime($tramite->tp_fecha)) }}</span>
                                                         @endif
                                                     </div>
-                                                    <form method="POST" action="{{ route('tramites.cambiar_estado') }}" class="form-cambiar-estado inline-flex items-center m-0 shrink-0">
+                                                    <form method="POST" action="{{ route('tramites.cambiar_estado') }}" class="form-cambiar-estado inline-flex items-center m-0 shrink-0" data-desc="Poder #{{ $tramite->id_tram_poderes }} ({{ $tramite->tp_razon_otorga_poder ?: 'General' }})">
                                                         @csrf
                                                         <input type="hidden" name="cliente_id" value="{{ $cliente->id_cliente }}">
                                                         <input type="hidden" name="tramite_tipo" value="poderes">
@@ -681,7 +705,7 @@
                                                         <select name="estado" data-previous="{{ $tramite->estado ?? 'en_proceso' }}" class="estado-select text-xs font-bold py-1 px-2.5 rounded-lg border focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer {{ ($tramite->estado ?? 'en_proceso') === 'listo' ? 'bg-emerald-50 text-emerald-700 border-emerald-300' : (($tramite->estado ?? '') === 'en_revision' ? 'bg-blue-50 text-blue-700 border-blue-300' : (($tramite->estado ?? '') === 'entregado' ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-amber-50 text-amber-800 border-amber-300')) }}">
                                                             <option value="en_proceso" {{ ($tramite->estado ?? 'en_proceso') === 'en_proceso' ? 'selected' : '' }}>🟡 En Proceso</option>
                                                             <option value="en_revision" {{ ($tramite->estado ?? '') === 'en_revision' ? 'selected' : '' }}>🔵 En Revisión</option>
-                                                            <option value="listo" {{ ($tramite->estado ?? '') === 'listo' ? 'selected' : '' }}>🟢 ¡Listo!</option>
+                                                            <option value="listo" {{ ($tramite->estado ?? '') === 'listo' ? 'selected' : '' }}>🟢 Listo para entregar</option>
                                                             <option value="entregado" {{ ($tramite->estado ?? '') === 'entregado' ? 'selected' : '' }}>⚪ Entregado</option>
                                                         </select>
                                                     </form>
@@ -709,15 +733,21 @@
                                                             <span class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-bold text-[11px] border border-emerald-200">✓ Pagado</span>
                                                         @endif
                                                     </div>
-                                                    <div class="flex items-center gap-1.5 shrink-0">
+                                                    <div class="flex items-center gap-1.5 shrink-0 flex-wrap">
                                                         @if(($tramite->tp_saldo ?? 0) > 0)
                                                             <button type="button" onclick="abrirModalCobro('poderes', {{ $tramite->id_tram_poderes }}, 'Poder #{{ $tramite->id_tram_poderes }}', {{ $tramite->tp_saldo }})" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all cursor-pointer">
                                                                 <span>💵 Cobrar</span>
                                                             </button>
                                                         @endif
-                                                        <a href="{{ route('poderes.show', $tramite->id_tram_poderes) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm border transition-colors bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100">
+                                                        @if(!empty($tramite->documento_pdf))
+                                                            <a href="{{ asset($tramite->documento_pdf) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm border transition-colors bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-600 hover:text-white" title="Ver Documento PDF Listo">
+                                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                                <span>PDF Final</span>
+                                                            </a>
+                                                        @endif
+                                                        <a href="{{ route('poderes.show', $tramite->id_tram_poderes) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-sm border transition-colors bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100" title="Imprimir Formulario">
                                                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                                                            <span>PDF</span>
+                                                            <span>Hoja</span>
                                                         </a>
                                                     </div>
                                                 </div>
@@ -974,6 +1004,93 @@
         </div>
     </div>
 
+    <!-- Modal: Cargar Documento PDF al pasar a "Listo para entregar" -->
+    <div id="modalSubirPdfListo" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-pdf-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" onclick="cerrarModalPdfListo()"></div>
+
+            <div class="relative inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-200">
+                <form id="formSubirPdfListo" onsubmit="enviarPdfListo(event)">
+                    @csrf
+                    <input type="hidden" name="cliente_id" id="pdf_cliente_id" value="">
+                    <input type="hidden" name="tramite_tipo" id="pdf_tramite_tipo" value="">
+                    <input type="hidden" name="tramite_id" id="pdf_tramite_id" value="">
+                    <input type="hidden" name="estado" value="listo">
+
+                    <!-- Header Modal -->
+                    <div class="bg-gradient-to-r from-emerald-600 to-teal-700 px-6 py-5 text-white flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 bg-white/15 backdrop-blur-md rounded-xl border border-white/20">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-black tracking-tight" id="modal-pdf-title">Cargar Documento Final PDF</h3>
+                                <p class="text-xs text-emerald-100 font-medium" id="pdf_tramite_desc">Listo para entregar</p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="cerrarModalPdfListo()" class="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-xl transition-all cursor-pointer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- Body Modal -->
+                    <div class="p-6 space-y-4">
+                        <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 leading-relaxed font-medium flex items-start gap-2.5">
+                            <span class="text-base leading-none">ℹ️</span>
+                            <div>
+                                Para cambiar el estado a <strong>Listo para entregar</strong>, es obligatorio cargar el <strong>documento final en PDF</strong> ya redactado y listo para que el cliente lo descargue o retire.
+                            </div>
+                        </div>
+
+                        <!-- Dropzone / Input de Archivo -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">Archivo PDF del Documento <span class="text-red-500">*</span></label>
+                            <div id="dropzonePdfListo" onclick="document.getElementById('inputDocumentoPdf').click()" 
+                                 class="border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50 hover:bg-emerald-50/40 rounded-2xl p-6 text-center cursor-pointer transition-all">
+                                <input type="file" id="inputDocumentoPdf" name="documento_pdf" accept="application/pdf" class="hidden" onchange="actualizarPreviewPdf(this)">
+                                
+                                <div id="previewPdfEmpty" class="space-y-2">
+                                    <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl shadow-xs">
+                                        📄
+                                    </div>
+                                    <div class="text-xs font-bold text-slate-700">
+                                        <span class="text-emerald-700 underline">Haz clic para seleccionar</span> o arrastra el archivo aquí
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 font-medium">Solo archivos PDF (Máx. 25 MB)</p>
+                                </div>
+
+                                <div id="previewPdfSelected" class="hidden space-y-2">
+                                    <div class="w-12 h-12 mx-auto rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-xl shadow-md">
+                                        ✓
+                                    </div>
+                                    <div class="text-xs font-black text-slate-900 truncate max-w-xs mx-auto" id="nombreArchivoPdf">
+                                        documento.pdf
+                                    </div>
+                                    <p class="text-[11px] text-emerald-600 font-bold" id="tamanoArchivoPdf">0 KB</p>
+                                    <button type="button" onclick="event.stopPropagation(); limpiarArchivoPdf();" class="text-[11px] font-bold text-rose-600 hover:underline">
+                                        Cambiar archivo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="pdfErrorMsg" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-700"></div>
+                    </div>
+
+                    <!-- Footer Modal -->
+                    <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex items-center justify-end gap-3">
+                        <button type="button" onclick="cerrarModalPdfListo()" class="px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
+                            Cancelar
+                        </button>
+                        <button type="submit" id="btnConfirmarPdf" class="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl text-xs font-extrabold shadow-md shadow-emerald-200 transition-all cursor-pointer">
+                            <span>🟢 Subir PDF y Marcar Listo</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Contenedor Flotante de Toast Notifications AJAX -->
     <div id="toastNotificationContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
 
@@ -982,6 +1099,8 @@
     <script>
         const tieneCajaAbierta = @json($tieneCajaAbierta ?? false);
         let currentTramiteSaldo = 0;
+        let activeEstadoSelect = null;
+        let activeEstadoForm = null;
 
         function abrirModalCobro(tramiteTipo, tramiteId, tramiteTitulo, saldoPendiente) {
             if (!tieneCajaAbierta) {
@@ -1039,6 +1158,158 @@
         function cerrarModalCajaRequerida() {
             document.getElementById('modalCajaRequerida').classList.add('hidden');
         }
+
+        // ============================================
+        // Lógica de Modal de Subida de PDF al pasar a "Listo"
+        // ============================================
+        function abrirModalPdfListo(selectEl, formEl) {
+            activeEstadoSelect = selectEl;
+            activeEstadoForm = formEl;
+
+            const clienteId = formEl.querySelector('input[name="cliente_id"]')?.value || '';
+            const tramiteTipo = formEl.querySelector('input[name="tramite_tipo"]')?.value || '';
+            const tramiteId = formEl.querySelector('input[name="tramite_id"]')?.value || '';
+            const desc = formEl.getAttribute('data-desc') || 'Trámite';
+
+            document.getElementById('pdf_cliente_id').value = clienteId;
+            document.getElementById('pdf_tramite_tipo').value = tramiteTipo;
+            document.getElementById('pdf_tramite_id').value = tramiteId;
+            document.getElementById('pdf_tramite_desc').innerText = desc;
+
+            limpiarArchivoPdf();
+            document.getElementById('pdfErrorMsg').classList.add('hidden');
+            document.getElementById('pdfErrorMsg').innerText = '';
+
+            document.getElementById('modalSubirPdfListo').classList.remove('hidden');
+        }
+
+        function cerrarModalPdfListo() {
+            document.getElementById('modalSubirPdfListo').classList.add('hidden');
+            // Revertir el select si el modal se cierra sin enviar
+            if (activeEstadoSelect) {
+                const prev = activeEstadoSelect.getAttribute('data-previous') || 'en_proceso';
+                activeEstadoSelect.value = prev;
+                aplicarEstiloEstado(activeEstadoSelect, prev);
+                activeEstadoSelect = null;
+                activeEstadoForm = null;
+            }
+        }
+
+        function actualizarPreviewPdf(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                    alert('Por favor selecciona únicamente archivos en formato PDF.');
+                    input.value = '';
+                    return;
+                }
+                document.getElementById('nombreArchivoPdf').innerText = file.name;
+                const sizeKb = (file.size / 1024).toFixed(1);
+                document.getElementById('tamanoArchivoPdf').innerText = (sizeKb > 1024 ? (sizeKb / 1024).toFixed(2) + ' MB' : sizeKb + ' KB');
+                document.getElementById('previewPdfEmpty').classList.add('hidden');
+                document.getElementById('previewPdfSelected').classList.remove('hidden');
+            }
+        }
+
+        function limpiarArchivoPdf() {
+            const input = document.getElementById('inputDocumentoPdf');
+            if (input) input.value = '';
+            document.getElementById('previewPdfEmpty').classList.remove('hidden');
+            document.getElementById('previewPdfSelected').classList.add('hidden');
+        }
+
+        async function enviarPdfListo(event) {
+            event.preventDefault();
+            const input = document.getElementById('inputDocumentoPdf');
+            const errorBox = document.getElementById('pdfErrorMsg');
+            const btnSubmit = document.getElementById('btnConfirmarPdf');
+
+            if (!input.files || input.files.length === 0) {
+                errorBox.innerText = '⚠️ Debes seleccionar o arrastrar el archivo PDF final del trámite.';
+                errorBox.classList.remove('hidden');
+                return;
+            }
+
+            const modalForm = document.getElementById('formSubirPdfListo');
+            const formData = new FormData(modalForm);
+
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '<span>⏳ Subiendo y actualizando...</span>';
+            errorBox.classList.add('hidden');
+
+            try {
+                const response = await fetch('{{ route("tramites.cambiar_estado") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    if (activeEstadoSelect) {
+                        activeEstadoSelect.setAttribute('data-previous', 'listo');
+                        activeEstadoSelect.value = 'listo';
+                        aplicarEstiloEstado(activeEstadoSelect, 'listo');
+                    }
+                    mostrarToast('🎉 ¡Trámite marcado como LISTO PARA ENTREGAR! Documento PDF cargado y alerta enviada a la App.', 'success');
+                    
+                    // Cerrar modal sin revertir
+                    activeEstadoSelect = null;
+                    activeEstadoForm = null;
+                    document.getElementById('modalSubirPdfListo').classList.add('hidden');
+                    
+                    // Recargar ligeramente para mostrar el botón "PDF Final" actualizado
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    throw new Error(data.message || 'Error al cargar el documento.');
+                }
+            } catch (error) {
+                console.error('Error al subir PDF listo:', error);
+                errorBox.innerText = '⚠️ ' + (error.message || 'Error al procesar el archivo.');
+                errorBox.classList.remove('hidden');
+            } finally {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = '<span>🟢 Subir PDF y Marcar Listo</span>';
+            }
+        }
+
+        // Drag and Drop en Dropzone
+        document.addEventListener('DOMContentLoaded', function () {
+            const dropzone = document.getElementById('dropzonePdfListo');
+            if (dropzone) {
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropzone.classList.add('border-emerald-500', 'bg-emerald-50');
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropzone.classList.remove('border-emerald-500', 'bg-emerald-50');
+                    }, false);
+                });
+
+                dropzone.addEventListener('drop', (e) => {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    if (files.length > 0) {
+                        const input = document.getElementById('inputDocumentoPdf');
+                        input.files = files;
+                        actualizarPreviewPdf(input);
+                    }
+                }, false);
+            }
+        });
 
         // Sistema de Toast Flotante
         function mostrarToast(mensaje, tipo = 'success') {
@@ -1109,6 +1380,13 @@
                 select.addEventListener('change', async function () {
                     const nuevoEstado = this.value;
                     const prevEstado = this.getAttribute('data-previous') || 'en_proceso';
+
+                    // Si el nuevo estado es "listo", abrir el modal para subir el documento PDF obligatorio
+                    if (nuevoEstado === 'listo') {
+                        abrirModalPdfListo(this, form);
+                        return;
+                    }
+
                     const formData = new FormData(form);
 
                     // Indicador visual de guardando
@@ -1134,15 +1412,11 @@
                             const estadoLabels = {
                                 'en_proceso': '🟡 En Proceso',
                                 'en_revision': '🔵 En Revisión',
-                                'listo': '🟢 ¡Listo para Retiro!',
+                                'listo': '🟢 Listo para entregar',
                                 'entregado': '⚪ Entregado'
                             };
 
-                            if (nuevoEstado === 'listo') {
-                                mostrarToast('🎉 ¡Trámite marcado como LISTO! Alerta enviada a la App del cliente.', 'success');
-                            } else {
-                                mostrarToast(`✅ Estado actualizado: ${estadoLabels[nuevoEstado] || nuevoEstado}`, 'success');
-                            }
+                            mostrarToast(`✅ Estado actualizado: ${estadoLabels[nuevoEstado] || nuevoEstado}`, 'success');
                         } else {
                             throw new Error(data.message || 'No se pudo actualizar el estado.');
                         }
@@ -1150,7 +1424,7 @@
                         console.error('Error al actualizar estado:', error);
                         this.value = prevEstado;
                         aplicarEstiloEstado(this, prevEstado);
-                        mostrarToast('⚠️ Error al actualizar el estado. Intenta nuevamente.', 'error');
+                        mostrarToast('⚠️ ' + (error.message || 'Error al actualizar el estado.'), 'error');
                     } finally {
                         this.disabled = false;
                         this.style.opacity = '1';

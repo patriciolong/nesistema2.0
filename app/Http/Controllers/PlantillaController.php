@@ -18,6 +18,10 @@ class PlantillaController extends Controller
      */
     public function index(Request $request)
     {
+        if (!Auth::user()->hasPermission('plantillas.view')) {
+            abort(403, 'Acceso restringido: No tienes autorización para ver las plantillas de documentos.');
+        }
+
         $search = $request->query('search');
         $categoria = $request->query('categoria');
 
@@ -52,6 +56,10 @@ class PlantillaController extends Controller
      */
     public function uploadImage(Request $request)
     {
+        if (!Auth::user()->hasPermission('plantillas.create') && !Auth::user()->hasPermission('plantillas.edit')) {
+            return response()->json(['error' => 'No tienes permiso para subir imágenes a plantillas.'], 403);
+        }
+
         $destinationPath = public_path('uploads/plantillas_imagenes');
         if (!file_exists($destinationPath)) {
             mkdir($destinationPath, 0755, true);
@@ -125,6 +133,10 @@ class PlantillaController extends Controller
      */
     public function create()
     {
+        if (!Auth::user()->hasPermission('plantillas.create')) {
+            abort(403, 'Acceso restringido: No tienes autorización para crear nuevas plantillas.');
+        }
+
         $encabezados = PlantillaMembrete::encabezados()->orderBy('es_predeterminado', 'desc')->orderBy('nombre', 'asc')->get();
         $pies = PlantillaMembrete::pies()->orderBy('es_predeterminado', 'desc')->orderBy('nombre', 'asc')->get();
 
@@ -136,6 +148,10 @@ class PlantillaController extends Controller
      */
     public function store(Request $request)
     {
+        if (!Auth::user()->hasPermission('plantillas.create')) {
+            abort(403, 'Acceso restringido: No tienes autorización para crear nuevas plantillas.');
+        }
+
         $validated = $request->validate([
             'nombre_plantilla' => 'required|string|max:255|unique:plantillas,nombre_plantilla',
             'descripcion' => 'nullable|string|max:255',
@@ -161,6 +177,10 @@ class PlantillaController extends Controller
      */
     public function edit(Plantilla $plantilla)
     {
+        if (!Auth::user()->hasPermission('plantillas.edit')) {
+            abort(403, 'Acceso restringido: No tienes autorización para editar plantillas de documentos.');
+        }
+
         $encabezados = PlantillaMembrete::encabezados()->orderBy('es_predeterminado', 'desc')->orderBy('nombre', 'asc')->get();
         $pies = PlantillaMembrete::pies()->orderBy('es_predeterminado', 'desc')->orderBy('nombre', 'asc')->get();
 
@@ -172,6 +192,10 @@ class PlantillaController extends Controller
      */
     public function update(Request $request, Plantilla $plantilla)
     {
+        if (!Auth::user()->hasPermission('plantillas.edit')) {
+            abort(403, 'Acceso restringido: No tienes autorización para editar plantillas de documentos.');
+        }
+
         $validated = $request->validate([
             'nombre_plantilla' => 'required|string|max:255|unique:plantillas,nombre_plantilla,' . $plantilla->id_plantilla . ',id_plantilla',
             'descripcion' => 'nullable|string|max:255',
@@ -196,6 +220,10 @@ class PlantillaController extends Controller
      */
     public function destroy(Plantilla $plantilla)
     {
+        if (!Auth::user()->hasPermission('plantillas.delete')) {
+            abort(403, 'Acceso restringido: No tienes autorización para eliminar plantillas de documentos.');
+        }
+
         $plantilla->delete();
         return redirect()->route('plantillas.index')->with('success', 'Plantilla eliminada correctamente.');
     }
@@ -205,6 +233,10 @@ class PlantillaController extends Controller
      */
     public function duplicar(Plantilla $plantilla)
     {
+        if (!Auth::user()->hasPermission('plantillas.create')) {
+            abort(403, 'Acceso restringido: No tienes autorización para crear o duplicar plantillas.');
+        }
+
         $nuevoNombre = 'Copia de ' . $plantilla->nombre_plantilla;
         $count = Plantilla::where('nombre_plantilla', 'like', "{$nuevoNombre}%")->count();
         if ($count > 0) {
@@ -231,6 +263,9 @@ class PlantillaController extends Controller
      */
     public function importPdf(Request $request)
     {
+        if (!Auth::user()->hasPermission('plantillas.create') && !Auth::user()->hasPermission('plantillas.edit')) {
+            return response()->json(['success' => false, 'message' => 'No tienes autorización para importar plantillas.'], 403);
+        }
         $request->validate([
             'documento' => 'required|file|max:20480', // max 20MB
         ]);
@@ -326,6 +361,10 @@ class PlantillaController extends Controller
      */
     public function generar(Request $request, Plantilla $plantilla)
     {
+        if (!Auth::user()->hasPermission('plantillas.generar') && !Auth::user()->hasPermission('plantillas.view')) {
+            abort(403, 'Acceso restringido: No tienes autorización para generar documentos notariales.');
+        }
+
         $clienteId = $request->query('cliente');
         $cliente = $clienteId ? Cliente::find($clienteId) : null;
         $clientes = Cliente::orderBy('c_apellido', 'asc')->get(['id_cliente', 'c_nombre', 'c_apellido', 'c_identificacion']);
@@ -346,6 +385,10 @@ class PlantillaController extends Controller
      */
     public function guardarDocumentoCliente(Request $request, ?Plantilla $plantilla = null)
     {
+        if (!Auth::user()->hasPermission('plantillas.generar') && !Auth::user()->hasPermission('plantillas.create')) {
+            return response()->json(['success' => false, 'message' => 'No tienes autorización para guardar documentos generados.'], 403);
+        }
+
         $plantillaId = $plantilla ? $plantilla->id_plantilla : $request->input('plantilla_id');
         $titulo = $request->input('titulo_documento') ?: ($plantilla ? $plantilla->nombre_plantilla : 'Documento Notarial');
 
@@ -412,6 +455,10 @@ class PlantillaController extends Controller
      */
     public function descargarPdf(Request $request, Plantilla $plantilla)
     {
+        if (!Auth::user()->hasPermission('plantillas.generar') && !Auth::user()->hasPermission('plantillas.view')) {
+            abort(403, 'Acceso restringido: No tienes autorización para descargar o visualizar documentos generados.');
+        }
+
         $htmlContenido = $request->input('contenido_html', $plantilla->contenido_html);
         $clienteId = $request->input('id_cliente');
         $cliente = $clienteId ? Cliente::find($clienteId) : null;
@@ -462,6 +509,9 @@ class PlantillaController extends Controller
      */
     public function descargarDocx(Request $request, Plantilla $plantilla)
     {
+        if (!Auth::user()->hasPermission('plantillas.generar') && !Auth::user()->hasPermission('plantillas.view')) {
+            abort(403, 'Acceso restringido: No tienes autorización para exportar documentos a Word.');
+        }
         $htmlContenido = $request->input('contenido_html', $plantilla->contenido_html);
         $clienteId = $request->input('id_cliente');
         $cliente = $clienteId ? Cliente::find($clienteId) : null;
@@ -698,5 +748,66 @@ class PlantillaController extends Controller
         }
 
         return $custom;
+    }
+
+    /**
+     * Display the digital archive of all documents generated from templates.
+     */
+    public function expediente(Request $request)
+    {
+        if (!Auth::user()->hasPermission('plantillas.view')) {
+            abort(403, 'Acceso restringido: No tienes autorización para ver el expediente de plantillas.');
+        }
+
+        $search = $request->query('search');
+        $plantillaId = $request->query('plantilla_id');
+        $fechaDesde = $request->query('fecha_desde');
+        $fechaHasta = $request->query('fecha_hasta');
+
+        $query = DocumentoGenerado::with(['cliente', 'plantilla']);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('titulo_documento', 'like', "%{$search}%")
+                  ->orWhere('usuario_creador', 'like', "%{$search}%")
+                  ->orWhereHas('cliente', function ($cq) use ($search) {
+                      $cq->where('c_nombre', 'like', "%{$search}%")
+                         ->orWhere('c_apellido', 'like', "%{$search}%")
+                         ->orWhere('c_identificacion', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($plantillaId && $plantillaId !== 'todas') {
+            $query->where('plantilla_id', $plantillaId);
+        }
+
+        if ($fechaDesde) {
+            $query->whereDate('created_at', '>=', $fechaDesde);
+        }
+
+        if ($fechaHasta) {
+            $query->whereDate('created_at', '<=', $fechaHasta);
+        }
+
+        $documentos = $query->orderBy('created_at', 'desc')->paginate(15);
+        $plantillas = Plantilla::orderBy('nombre_plantilla', 'asc')->get(['id_plantilla', 'nombre_plantilla']);
+        $totalDocs = DocumentoGenerado::count();
+
+        return view('plantillas.expediente', compact('documentos', 'plantillas', 'totalDocs', 'search', 'plantillaId', 'fechaDesde', 'fechaHasta'));
+    }
+
+    /**
+     * Remove a generated document record from the archive.
+     */
+    public function destroyExpediente(DocumentoGenerado $documento)
+    {
+        if (!Auth::user()->hasPermission('plantillas.delete')) {
+            abort(403, 'Acceso restringido: No tienes autorización para eliminar documentos del expediente.');
+        }
+
+        $documento->delete();
+
+        return redirect()->route('plantillas.expediente')->with('success', 'Documento eliminado del expediente exitosamente.');
     }
 }

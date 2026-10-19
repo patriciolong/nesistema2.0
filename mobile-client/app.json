@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "NESISTEMA",
+    "slug": "nesistema-mobile-app",
+    "version": "1.0.1",
+    "orientation": "portrait",
+    "icon": "./playstore_assets/icon-512.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./playstore_assets/icon-512.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1e3a8a"
+    },
+    "ios": {
+      "bundleIdentifier": "com.nesistema.app",
+      "buildNumber": "3",
+      "supportsTablet": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "491c869c-8a19-4e2f-bb99-f8fb9789db07"
+      }
+    }
+  }
+}

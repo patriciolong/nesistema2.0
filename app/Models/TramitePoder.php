@@ -21,7 +21,7 @@ class TramitePoder extends Model
         'tp_provincia', 'tp_telefonos_enviar', 'id_usuario', 'tp_observaciones',
         'tp_costo_tramite', 'tp_abono_tramite', 'tp_saldo', 'tp_nombre2',
         'tp_apellido2', 'tp_identificacion2', 'tp_telefono2',
-        'estado', 'fecha_completado', 'notificado_at'
+        'estado', 'documento_pdf', 'fecha_completado', 'notificado_at'
     ];
 
     public function cliente()

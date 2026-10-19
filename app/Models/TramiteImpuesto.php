@@ -35,6 +35,7 @@ class TramiteImpuesto extends Model
         'ti_saldo',
         'ti_firmar_en',
         'estado',
+        'documento_pdf',
         'fecha_completado',
         'notificado_at',
     ];

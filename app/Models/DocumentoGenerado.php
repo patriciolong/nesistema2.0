@@ -16,6 +16,7 @@ class DocumentoGenerado extends Model
         'contenido_html',
         'usuario_creador',
         'estado',
+        'documento_pdf',
         'fecha_completado',
         'notificado_at',
     ];

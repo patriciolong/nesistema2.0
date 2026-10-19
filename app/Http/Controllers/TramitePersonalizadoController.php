@@ -28,6 +28,10 @@ class TramitePersonalizadoController extends Controller
      */
     public function create(Request $request, Cliente $cliente, TipoTramite $tipoTramite)
     {
+        if (!Auth::user()->hasPermission('tramites_personalizados.create')) {
+            abort(403, 'Acceso restringido: No tienes permiso para crear trámites personalizados.');
+        }
+
         $bancos = Banco::activos()->orderBy('nombre')->get();
         $tarjetas = Tarjeta::with('banco')->activas()->orderBy('nombre')->get();
         $cajaAbierta = $this->cajaService->getCajaAbierta(Auth::user());
@@ -40,6 +44,9 @@ class TramitePersonalizadoController extends Controller
      */
     public function store(Request $request, Cliente $cliente, TipoTramite $tipoTramite)
     {
+        if (!Auth::user()->hasPermission('tramites_personalizados.create')) {
+            abort(403, 'Acceso restringido: No tienes permiso para crear trámites personalizados.');
+        }
         $request->validate([
             'valor_tramite' => 'required|numeric|min:0',
             'abono_tramite' => 'nullable|numeric|min:0',

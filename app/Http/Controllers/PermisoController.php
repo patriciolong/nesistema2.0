@@ -14,7 +14,7 @@ class PermisoController extends Controller
     public function index(Request $request)
     {
         $currentUser = Auth::user();
-        if (!$currentUser->hasPermission('permisos.manage')) {
+        if (!$currentUser->hasPermission('permisos.view') && !$currentUser->hasPermission('permisos.manage') && !$currentUser->hasPermission('permisos.edit')) {
             abort(403, 'Acceso restringido: No tienes autorización para gestionar permisos de usuarios.');
         }
 
@@ -62,7 +62,7 @@ class PermisoController extends Controller
     public function edit(User $user)
     {
         $currentUser = Auth::user();
-        if (!$currentUser->hasPermission('permisos.manage')) {
+        if (!$currentUser->hasPermission('permisos.edit') && !$currentUser->hasPermission('permisos.manage')) {
             abort(403, 'Acceso restringido: No tienes autorización para gestionar permisos de usuarios.');
         }
 
@@ -70,7 +70,13 @@ class PermisoController extends Controller
         $effectivePermissions = $user->getEffectivePermissions();
         $isCustom = is_array($user->permissions);
 
-        return view('permisos.edit', compact('user', 'availableGroups', 'effectivePermissions', 'isCustom'));
+        // Calculate total available permissions count
+        $totalPermissionsCount = 0;
+        foreach ($availableGroups as $group) {
+            $totalPermissionsCount += count($group['permisos']);
+        }
+
+        return view('permisos.edit', compact('user', 'availableGroups', 'effectivePermissions', 'isCustom', 'totalPermissionsCount'));
     }
 
     /**
@@ -79,19 +85,27 @@ class PermisoController extends Controller
     public function update(Request $request, User $user)
     {
         $currentUser = Auth::user();
-        if (!$currentUser->hasPermission('permisos.manage')) {
+        if (!$currentUser->hasPermission('permisos.edit') && !$currentUser->hasPermission('permisos.manage')) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'No tienes autorización para gestionar permisos.'], 403);
+            }
             abort(403, 'Acceso restringido: No tienes autorización para gestionar permisos de usuarios.');
         }
 
-        // Action: Reset to role default
-        if ($request->has('reset_to_role')) {
+        // Action: Reset to role default (only when explicitly requested via action=reset_to_role)
+        if ($request->input('action') === 'reset_to_role') {
             $user->permissions = null;
             $user->save();
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => true, 'message' => "Permisos restablecidos al rol {$user->role}."]);
+            }
 
             return redirect()->route('permisos.index')
                 ->with('success', "Permisos de '{$user->name}' restablecidos a los valores predeterminados del rol ({$user->role}).");
         }
 
+        // Normal Save: Save the selected permissions array
         $selectedPermissions = $request->input('permissions', []);
         if (!is_array($selectedPermissions)) {
             $selectedPermissions = [];
@@ -107,11 +121,25 @@ class PermisoController extends Controller
 
         $cleanPermissions = array_values(array_intersect($selectedPermissions, $validKeys));
 
+        // Always save as array (even empty array [] if all unchecked)
         $user->permissions = $cleanPermissions;
         $user->save();
 
-        return redirect()->route('permisos.index')
-            ->with('success', "Permisos actualizados exitosamente para el usuario '{$user->name}' (" . count($cleanPermissions) . " módulos activos).");
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Permisos guardados correctamente para '{$user->name}' (" . count($cleanPermissions) . " activos).",
+                'count' => count($cleanPermissions)
+            ]);
+        }
+
+        if ($request->input('return_to') === 'index') {
+            return redirect()->route('permisos.index')
+                ->with('success', "¡Permisos guardados correctamente para '{$user->name}'! (" . count($cleanPermissions) . " de " . count($validKeys) . " permisos activos).");
+        }
+
+        return redirect()->route('permisos.edit', $user)
+            ->with('success', "¡Permisos guardados correctamente para '{$user->name}'! (" . count($cleanPermissions) . " de " . count($validKeys) . " permisos activos).");
     }
 
     /**
@@ -120,7 +148,7 @@ class PermisoController extends Controller
     public function applyPreset(Request $request, User $user)
     {
         $currentUser = Auth::user();
-        if (!$currentUser->hasPermission('permisos.manage')) {
+        if (!$currentUser->hasPermission('permisos.edit') && !$currentUser->hasPermission('permisos.manage')) {
             abort(403, 'Acceso restringido: No tienes autorización para gestionar permisos.');
         }
 
@@ -137,11 +165,30 @@ class PermisoController extends Controller
             case 'empleado':
                 $user->permissions = User::getRoleDefaultPermissions('Empleado');
                 break;
-            case 'solo_caja':
+            case 'solo_lectura':
                 $user->permissions = [
                     'dashboard.view',
-                    'cajas.operar', 'cajas.historial',
-                    'clientes.view', 'clientes.abonar'
+                    'clientes.view',
+                    'cartera.view',
+                    'cajas.view',
+                    'tramites_global.view',
+                    'poderes.view',
+                    'divorcios.view',
+                    'impuestos.view',
+                    'tramites_varios.view',
+                    'tramites_personalizados.view',
+                    'plantillas.view',
+                    'membretes.view',
+                    'bancos.view',
+                    'tarjetas.view',
+                    'oficinas.view',
+                    'tipo_tramites.view',
+                    'users.view',
+                    'permisos.view',
+                    'reportes.cajas',
+                    'reportes.desempeno',
+                    'reportes.cartera',
+                    'reportes.control_precios',
                 ];
                 break;
             case 'reset':

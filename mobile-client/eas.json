@@ -1,0 +1,29 @@
+{
+  "cli": {
+    "version": ">= 24.3.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "scheme": "App",
+        "image": "latest",
+        "simulator": false
+      }
+    },
+    "production": {
+      "ios": {
+        "scheme": "App",
+        "image": "latest"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

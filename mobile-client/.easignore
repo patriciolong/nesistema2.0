@@ -1,0 +1,9 @@
+# EAS Build Ignore
+node_modules
+.idea
+android
+*.apk
+*.aab
+dist/*.map
+.git
+.eas-inspect
